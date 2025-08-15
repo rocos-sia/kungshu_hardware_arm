@@ -15,10 +15,16 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(soem REQUIRED)
+find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
 
 
-add_executable(arm_node src/arm_node.cpp)
-target_link_libraries(arm_node PUBLIC soem)
+add_executable(arm_node src/arm_node.cpp src/fieldbus.cpp)
+target_link_libraries(arm_node PUBLIC
+        soem
+        fmt::fmt
+        spdlog::spdlog
+)
 target_include_directories(arm_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
