@@ -22,12 +22,31 @@
 
 #include <fmt/core.h>
 #include <soem/soem.h>
+#include <spdlog/spdlog.h>
 
 #include <string>
+#include <thread>
 
 namespace KSH {
 class Fieldbus {
  public:
+  struct OSAL_PACKED Outputs {
+    uint16 control_word;  // Control word
+    int8   mode_of_operation;  // Mode of operation
+    int32  target_position;  // Target Position
+    int32  target_velocity;  // Target Velocity
+    int16  target_torque;  // Target Torque
+  };
+
+  struct OSAL_PACKED Inputs {
+    uint16 status_word;  // Status word
+    int32  position_actual_value;  // Position Actual Value
+    int32  velocity_actual_value;  // Velocity Actual Value
+    int16  torque_actual_value;  // Torque Actual Value
+    int32  auxiliary_position_actual_value;  // Auxiliary position actual value
+    int16  analog_input;  // Analog input
+  };
+
   explicit Fieldbus(const std::string &ifname) : ifname_(ifname) {}
 
   enum ObjType { OTYPE_VAR = 0x7, OTYPE_ARRAY = 0x8, OTYPE_RECORD = 0x9 };
@@ -54,6 +73,20 @@ class Fieldbus {
 
   void PrintAvaliableAdapters();  // Print all available adapters
 
+  uint16 GetStatusWord(int id = 0) const;
+
+  int32 GetPosition(int id = 0) const;
+
+  int32 GetVelocity(int id = 0) const;
+
+  int16 GetTorque(int id = 0) const;
+
+  int32 GetAuxiliaryPosition(int id = 0) const;
+
+  int16 GetAnalogInput(int id = 0) const;
+
+
+
  private:
   /// @brief Convert data type to string
   /// @param data_type data type
@@ -79,6 +112,8 @@ class Fieldbus {
 
   void si_sdo(int cnt);
 
+  static int slave_setup(ecx_contextt * ctx, uint16 slave);
+
  private:
   std::string ifname_{"enp1s0"};  // Net interface name
 
@@ -86,10 +121,21 @@ class Fieldbus {
   uint8 group_{0};       // Group number for EtherCAT communication
   uint8 IOmap_[4096]{};  // I/O map buffer
 
+  int roundtrip_time_ {0};
+
+  int min_time_ {0};
+  int max_time_ {std::numeric_limits<int>::max()};
+
   bool is_initialized_{false};  // Flag to check if the fieldbus is initialized
 
   ec_ODlistt ODlist_{};
   ec_OElistt OElist_{};
+
+  Inputs inputs_[14] {};
+  Outputs outputs_[14] {};
+
+  std::thread fieldbus_thread_;
+
 };
 }  // namespace KSH
 

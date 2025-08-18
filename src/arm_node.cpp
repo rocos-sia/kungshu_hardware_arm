@@ -14,5 +14,20 @@ int main(int argc, char *argv[]) {
 
     fieldbus.Start();
 
+    while (true) {
+
+      for (int i = 0; i < 3; i++) {
+        spdlog::info("status: {}; pos: {}; vel: {}; torque: {}; auxpos: {}; analog: {}",
+             fieldbus.GetStatusWord(i),
+             fieldbus.GetPosition(i),
+             fieldbus.GetVelocity(i),
+             fieldbus.GetTorque(i),
+             fieldbus.GetAuxiliaryPosition(i),
+             fieldbus.GetAnalogInput(i));
+      }
+
+      osal_usleep(1000000);
+    }
+
     return (0);
 }

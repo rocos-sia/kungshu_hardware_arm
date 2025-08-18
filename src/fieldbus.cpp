@@ -27,54 +27,71 @@ bool Fieldbus::Start() {
   }
   spdlog::info("Done.");
 
+  if (!ecx_config_init(&ctx_)) {
+    spdlog::error("ecx_config_init failed.");
+    return false;
+  }
+
   spdlog::info("{} slaves found and configured.", ctx_.slavecount);
+
+  for (int i = 1; i <= ctx_.slavecount; i++) {
+    ec_slavet *slave = &ctx_.slavelist[i];
+    slave->PO2SOconfig = slave_setup;
+  }
 
   spdlog::info("Sequential mapping of I/O... ");
   ecx_config_map_group(&ctx_, IOmap_, group_);
-  printf("mapped %dO+%dI bytes from %d segments", ctx_.grouplist[group_].Obytes,
-         ctx_.grouplist[group_].Ibytes, ctx_.grouplist[group_].nsegments);
+  spdlog::info("mapped {}O+{}I bytes from {} segments",
+               ctx_.grouplist[group_].Obytes, ctx_.grouplist[group_].Ibytes,
+               ctx_.grouplist[group_].nsegments);
   if (ctx_.grouplist[group_].nsegments > 1) {
     /* Show how slaves are distributed */
     for (int i = 0; i < ctx_.grouplist[group_].nsegments; ++i) {
-      printf("%s%d", i == 0 ? " (" : "+", ctx_.grouplist[group_].IOsegment[i]);
+      spdlog::info("{}{}", i == 0 ? " (" : "+",
+                   ctx_.grouplist[group_].IOsegment[i]);
     }
-    printf(" slaves)");
+    spdlog::info(" slaves)");
   }
-  printf("\n");
 
-  printf("Configuring distributed clock... ");
+  spdlog::info("Configuring distributed clock... ");
   ecx_configdc(&ctx_);
-  printf("done\n");
+  spdlog::info("done");
 
-  printf("Waiting for all slaves in safe operational... ");
+  spdlog::info("Waiting for all slaves in safe operational... ");
   ecx_statecheck(&ctx_, 0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 4);
-  printf("done\n");
+  spdlog::info("done");
 
-  printf("Send a roundtrip to make outputs in slaves happy... ");
+  spdlog::info("Send a roundtrip to make outputs in slaves happy... ");
   // fieldbus_roundtrip(fieldbus);
-  printf("done\n");
-
+  spdlog::info("done\n");
 
   PrintSlaveInfo(true);
 
-
-  printf("Setting operational state..");
+  spdlog::info("Setting operational state..");
   /* Act on slave 0 (a virtual slave used for broadcasting) */
   slave = ctx_.slavelist;
   slave->state = EC_STATE_OPERATIONAL;
   ecx_writestate(&ctx_, 0);
   /* Poll the result ten times before giving up */
   for (int i = 0; i < 10; ++i) {
-    printf(".");
+    spdlog::info(".");
     // fieldbus_roundtrip(fieldbus);
     ecx_statecheck(&ctx_, 0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE / 10);
     if (slave->state == EC_STATE_OPERATIONAL) {
-      printf(" all slaves are now operational\n");
+      spdlog::info(" all slaves are now operational\n");
+
+      fieldbus_thread_ = std::thread([this]() {
+        while (true) {
+          Roundtrip();
+          std::this_thread::sleep_for(std::chrono::microseconds(4000));
+        }
+      });
+
       return true;
     }
   }
 
-  printf(" failed,");
+  spdlog::info(" failed,");
   ecx_readstate(&ctx_);
   for (int i = 1; i <= ctx_.slavecount; ++i) {
     slave = ctx_.slavelist + i;
@@ -83,14 +100,33 @@ bool Fieldbus::Start() {
              slave->ALstatuscode, ec_ALstatuscode2string(slave->ALstatuscode));
     }
   }
-  printf("\n");
 
   return false;
 }
 
-bool Fieldbus::Close() {}
+bool Fieldbus::Close() { return true; }
 
-int Fieldbus::Roundtrip() { return 0; }
+int Fieldbus::Roundtrip() {
+  ec_timet start, end, diff;
+  int wkc;
+
+  start = osal_current_time();
+  ecx_send_processdata(&ctx_);
+  wkc = ecx_receive_processdata(&ctx_, EC_TIMEOUTRET);
+  end = osal_current_time();
+  osal_time_diff(&start, &end, &diff);
+  roundtrip_time_ = (int)(diff.tv_sec * 1000000 + diff.tv_nsec / 1000);
+
+  if (roundtrip_time_ < min_time_)
+    min_time_ = roundtrip_time_;
+  else if (roundtrip_time_ > max_time_)
+    max_time_ = roundtrip_time_;
+
+  memcpy(inputs_, ctx_.slavelist[0].inputs, ctx_.slavelist[0].Ibytes);
+  memcpy(outputs_, ctx_.slavelist[0].outputs, ctx_.slavelist[0].Obytes);
+
+  return wkc;
+}
 
 void Fieldbus::PrintSlaveInfo(bool printMAP, bool printSDO) {
   int cnt, i, j, nSM;
@@ -209,6 +245,63 @@ void Fieldbus::PrintAvaliableAdapters() {
   ec_adaptert *head = NULL;
 
   fmt::print("Adapters:\n");
+}
+uint16 Fieldbus::GetStatusWord(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+
+  return inputs_[id].status_word;
+}
+
+int32 Fieldbus::GetPosition(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+
+  return inputs_[id].position_actual_value;
+}
+
+int32 Fieldbus::GetVelocity(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+
+  return inputs_[id].velocity_actual_value;
+}
+
+int16 Fieldbus::GetTorque(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+}
+
+int32 Fieldbus::GetAuxiliaryPosition(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+
+  return inputs_[id].auxiliary_position_actual_value;
+}
+
+int16 Fieldbus::GetAnalogInput(int id) const {
+  if (id < 0 || id >= 14) {
+    // throw std::out_of_range("ID must be between 0 and 13");
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+    return 0;
+  }
+
+  return inputs_[id].analog_input;
 }
 
 std::string Fieldbus::dtype2string(uint16 data_type, uint16 bit_length) {
@@ -749,4 +842,48 @@ void Fieldbus::si_sdo(int cnt) {
   } else {
     while (ctx_.ecaterror) printf("%s", ecx_elist2string(&ctx_));
   }
+}
+
+int Fieldbus::slave_setup(ecx_contextt *ctx, uint16 slave) {
+  int retval;
+  uint8 u8val;
+  uint16 u16val;
+  uint32 u32val;
+
+  retval = 0;
+
+  uint16 map_1607[11] = {
+      0x0005, 0x0010, 0x6040,  // Control Word
+      0x0008, 0x6060,          // Modes of Operation
+      0x0020, 0x607a,          // Target Position
+      0x0020, 0x60ff,          // Target Velocity
+      0x0010, 0x6071,          // Target Torque
+  };  // Disable PDOs
+  retval += ecx_SDOwrite(ctx, slave, 0x1607, 0x00, TRUE, sizeof(map_1607),
+                         &map_1607, EC_TIMEOUTSAFE);
+
+  /* Map velocity PDO assignment via Complete Access */
+  uint16 map_1c12[2] = {0x0001, 0x1607};
+
+  retval += ecx_SDOwrite(ctx, slave, 0x1c12, 0x00, TRUE, sizeof(map_1c12),
+                         &map_1c12, EC_TIMEOUTSAFE);
+
+  uint16 map_1a07[13] = {
+      0x0006, 0x0010, 0x6041,  // Status Word
+      0x0020, 0x6064,          // Position Actual Value
+      0x0020, 0x606C,          // Velocity Actual Value
+      0x0010, 0x6077,          // Torque Actual Value
+      0x0020, 0x20A0,          // Auxiliary position actual value
+      0x0110, 0x2205,          // Analog input
+  };  // Disable PDOs
+  retval += ecx_SDOwrite(ctx, slave, 0x1a07, 0x00, TRUE, sizeof(map_1a07),
+                         &map_1a07, EC_TIMEOUTSAFE);
+
+  /* Map velocity PDO assignment via Complete Access */
+  uint16 map_1c13[2] = {0x0001, 0x1a07};
+
+  retval += ecx_SDOwrite(ctx, slave, 0x1c13, 0x00, TRUE, sizeof(map_1c13),
+                         &map_1c13, EC_TIMEOUTSAFE);
+
+  return retval;
 }
