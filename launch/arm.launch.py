@@ -1,10 +1,12 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, DeclareLaunchArgument
+from launch.actions import ExecuteProcess, DeclareLaunchArgument, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import LaunchConfiguration, FindExecutable, PathJoinSubstitution
 from launch_ros.actions import Node
 import os
 
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
+from uaclient.api.u.pro.services.dependencies.v1 import dependencies
 
 
 def generate_launch_description():
@@ -16,7 +18,7 @@ def generate_launch_description():
     node_name = 'arm_node'
 
     node_path_installed = PathJoinSubstitution([
-        FindPackageShare(package_name),
+        FindPackagePrefix(package_name),
         "lib",
         package_name,
         node_name
@@ -33,10 +35,18 @@ def generate_launch_description():
         package=package_name,
         executable=node_name,
         output='screen',
-        emulate_tty=True,
+        emulate_tty=True
+    )
+
+    # 3. 注册事件：当setcap_process执行完毕后，启动arm_node
+    start_arm_node_after_setcap = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=setcap_process,  # 监听setcap_process的退出事件
+            on_exit=[arm_node]  # 退出后执行的动作（启动节点）
+        )
     )
 
     return LaunchDescription([
         setcap_process,
-        arm_node
+        start_arm_node_after_setcap
     ])
