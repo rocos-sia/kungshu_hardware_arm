@@ -27,15 +27,21 @@ def generate_launch_description():
     setcap_process = ExecuteProcess(
         cmd=['sudo', 'setcap', 'cap_net_raw,cap_net_admin+eip', node_path_installed],
         output='screen',
-        emulate_tty=True,  # 模拟终端环境，确保sudo能正常工作
-        shell=False
+        # emulate_tty=True,  # 模拟终端环境，确保sudo能正常工作
+        # shell=False
     )
 
     arm_node = Node(
         package=package_name,
         executable=node_name,
         output='screen',
-        emulate_tty=True
+        # emulate_tty=True,
+        parameters=[
+            {
+                'left' : 'enx6c1ff71e2469',
+                'right': 'enp114s0'
+            }
+        ]
     )
 
     # 3. 注册事件：当setcap_process执行完毕后，启动arm_node

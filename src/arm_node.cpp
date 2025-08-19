@@ -1,33 +1,28 @@
-/*
- * This software is dual-licensed under GPLv3 and a commercial
- * license. See the file LICENSE.md distributed with this software for
- * full license information.
- */
+//
+// Created by think on 8/19/25.
+//
 
-#include <spdlog/spdlog.h>
-#include "kungshu_hardware_arm/fieldbus.h"
+#include "kungshu_hardware_arm/arm_node.h"
 
-int main(int argc, char *argv[]) {
-    spdlog::info("Hello, Arm Node!");
+namespace KSH {
 
-    KSH::Fieldbus fieldbus("enp114s0");
+ArmNode::ArmNode() : Node("arm_node") {
+  this->declare_parameter<std::string>("left", "enp1s0");
+  this->declare_parameter<std::string>("right", "enp2s0");
 
-    fieldbus.Start();
+  //Get parameters
+  std::string left = this->get_parameter("left").as_string();
+  std::string right = this->get_parameter("right").as_string();
 
-    while (true) {
+  RCLCPP_INFO(this->get_logger(), "Left arm bus: %s", left.c_str());
+  RCLCPP_INFO(this->get_logger(), "Right arm bus: %s", right.c_str());
 
-      for (int i = 0; i < 3; i++) {
-        spdlog::info("status: {}; pos: {}; vel: {}; torque: {}; auxpos: {}; analog: {}",
-             fieldbus.GetStatusWord(i),
-             fieldbus.GetPosition(i),
-             fieldbus.GetVelocity(i),
-             fieldbus.GetTorque(i),
-             fieldbus.GetAuxiliaryPosition(i),
-             fieldbus.GetAnalogInput(i));
-      }
+  Fieldbus left_bus(left); // left arm
+  Fieldbus right_bus(right); // right arm
 
-      osal_usleep(1000000);
-    }
+  left_bus.Start();
+  right_bus.Start();
 
-    return (0);
 }
+
+}  // namespace KSH
