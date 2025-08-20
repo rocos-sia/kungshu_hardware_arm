@@ -20,6 +20,8 @@
 #ifndef KSH_FIELDBUS_H
 #define KSH_FIELDBUS_H
 
+#include <kungshu_hardware_arm/drive.h>
+
 #include <fmt/core.h>
 #include <soem/soem.h>
 #include <spdlog/spdlog.h>
@@ -30,22 +32,6 @@
 namespace KSH {
 class Fieldbus {
  public:
-  struct OSAL_PACKED Outputs {
-    uint16 control_word;  // Control word
-    int8   mode_of_operation;  // Mode of operation
-    int32  target_position;  // Target Position
-    int32  target_velocity;  // Target Velocity
-    int16  target_torque;  // Target Torque
-  };
-
-  struct OSAL_PACKED Inputs {
-    uint16 status_word;  // Status word
-    int32  position_actual_value;  // Position Actual Value
-    int32  velocity_actual_value;  // Velocity Actual Value
-    int16  torque_actual_value;  // Torque Actual Value
-    int32  auxiliary_position_actual_value;  // Auxiliary position actual value
-    int16  analog_input;  // Analog input
-  };
 
   explicit Fieldbus(const std::string &ifname) : ifname_(ifname) {}
 
@@ -67,27 +53,78 @@ class Fieldbus {
 
   int Roundtrip();
 
+  /// @brief Print information of all slaves
+  /// @param printMAP if true, print the mapping of PDOs
+  /// @param printSDO  if true, print the SDOs of slaves
   void PrintSlaveInfo(
       bool printMAP = false,
       bool printSDO = false);  // Print information of all slaves
 
+  /// @brief Print all available adapters
   void PrintAvaliableAdapters();  // Print all available adapters
 
+  /// @brief Get Statusword of a slave
+  /// @param id Slave ID (0-13)
+  /// @return Status word of the slave
   uint16 GetStatusWord(int id = 0) const;
 
+  /// @brief Get Position of a slave
+  /// @param id Slave ID (0-13)
+  /// @return Position of the slave
   int32 GetPosition(int id = 0) const;
 
+  /// @brief Get Velocity of a slave
+  /// @param id Slave ID (0-13)
+  /// @return Velocity of the slave
   int32 GetVelocity(int id = 0) const;
 
+  /// @brief Get Torque of a slave
+  /// @param id Slave ID (0-13)
+  /// @return Torque of the slave
   int16 GetTorque(int id = 0) const;
 
+  /// @brief Get Auxiliary Position of a slave
+  /// @param id Slave ID (0-13)
+  /// @return Auxiliary Position of the slave
   int32 GetAuxiliaryPosition(int id = 0) const;
 
+  /// @brief Get Analog Input of a slave (torque sensor)
+  /// @param id Slave ID (0-13)
+  /// @return Analog Input of the slave
   int16 GetAnalogInput(int id = 0) const;
 
+  /// @brief Set Control Word of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Control word value to set
+  void SetControlWord(int id, uint16 value);
 
+  /// @brief Set Command of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Command value to set. 0->disabled, 1->enabled, 2->reset,
+  void SetCommand(int id, int8 value);
+
+  /// @brief Set Target Position of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Target position value to set
+  void SetTargetPosition(int id, int32 value);
+
+  /// @brief Set Target Velocity of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Target velocity value to set
+  void SetTargetVelocity(int id, int32 value);
+
+  /// @brief Set Target Torque of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Target torque value to set
+  void SetTargetTorque(int id, int16 value);
+
+  /// @brief Set Mode of Operation of a slave
+  /// @param id Slave ID (0-13)
+  /// @param value Mode of operation value to set
+  void SetModeOfOperation(int id, int8 value);
 
  private:
+
   /// @brief Convert data type to string
   /// @param data_type data type
   /// @param bit_length bit length
@@ -133,6 +170,9 @@ class Fieldbus {
 
   Inputs inputs_[14] {};
   Outputs outputs_[14] {};
+
+
+
 
   std::thread fieldbus_thread_;
 

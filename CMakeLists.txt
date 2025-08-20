@@ -23,7 +23,7 @@ find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 
 
-add_executable(arm_node src/main.cpp src/fieldbus.cpp src/arm_node.cpp)
+add_executable(arm_node src/main.cpp src/drive.cpp src/fieldbus.cpp src/arm_node.cpp)
 target_include_directories(arm_node PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>

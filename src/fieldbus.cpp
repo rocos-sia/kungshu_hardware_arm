@@ -80,10 +80,16 @@ bool Fieldbus::Start() {
     if (slave->state == EC_STATE_OPERATIONAL) {
       spdlog::info(" all slaves are now operational\n");
 
-      fieldbus_thread_ = std::thread([this]() {
-        while (true) {
-          Roundtrip();
-          std::this_thread::sleep_for(std::chrono::microseconds(4000));
+      fieldbus_thread_ = std::thread([=]() {
+        try {
+          while (true) {
+            Roundtrip();
+            std::this_thread::sleep_for(std::chrono::microseconds(4000));
+          }
+        } catch (const std::exception& e) {
+          spdlog::error("Exception in fieldbus thread: {}", e.what());
+        } catch (...) {
+          spdlog::error("Unknown exception in fieldbus thread");
         }
       });
 
@@ -108,11 +114,10 @@ bool Fieldbus::Close() { return true; }
 
 int Fieldbus::Roundtrip() {
   ec_timet start, end, diff;
-  int wkc;
 
   start = osal_current_time();
   ecx_send_processdata(&ctx_);
-  wkc = ecx_receive_processdata(&ctx_, EC_TIMEOUTRET);
+  int wkc = ecx_receive_processdata(&ctx_, EC_TIMEOUTRET);
   end = osal_current_time();
   osal_time_diff(&start, &end, &diff);
   roundtrip_time_ = (int)(diff.tv_sec * 1000000 + diff.tv_nsec / 1000);
@@ -246,6 +251,7 @@ void Fieldbus::PrintAvaliableAdapters() {
 
   fmt::print("Adapters:\n");
 }
+
 uint16 Fieldbus::GetStatusWord(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
@@ -282,6 +288,8 @@ int16 Fieldbus::GetTorque(int id) const {
     spdlog::warn("ID must be between 0 and 13, returning 0");
     return 0;
   }
+
+  return inputs_[id].torque_actual_value;
 }
 
 int32 Fieldbus::GetAuxiliaryPosition(int id) const {
@@ -302,6 +310,45 @@ int16 Fieldbus::GetAnalogInput(int id) const {
   }
 
   return inputs_[id].analog_input;
+}
+
+void Fieldbus::SetControlWord(int id, uint16 value) {
+  if (id < 0 || id >= 14) {
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+  }
+  outputs_[id].control_word = value;
+}
+
+void Fieldbus::SetTargetPosition(int id, int32 value) {
+  if (id < 0 || id >= 14) {
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+  }
+  outputs_[id].target_position = value;
+}
+
+void Fieldbus::SetTargetVelocity(int id, int32 value) {
+  if (id < 0 || id >= 14) {
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+  }
+  outputs_[id].target_velocity = value;
+}
+
+void Fieldbus::SetTargetTorque(int id, int16 value) {
+  if (id < 0 || id >= 14) {
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+  }
+  outputs_[id].target_torque = value;
+}
+
+void Fieldbus::SetModeOfOperation(int id, int8 value) {
+  if (id < 0 || id >= 14) {
+    spdlog::warn("ID must be between 0 and 13, returning 0");
+  }
+  outputs_[id].mode_of_operation = value;
+}
+
+void Fieldbus::SetCommand(int id, int8 value) {
+
 }
 
 std::string Fieldbus::dtype2string(uint16 data_type, uint16 bit_length) {
@@ -594,6 +641,7 @@ int Fieldbus::si_PDOassign(uint16 slave, uint16 PDOassign, int mapoffset,
   /* return total found bitlength (PDO) */
   return bsize;
 }
+
 int Fieldbus::si_map_sdo(int slave) {
   int wkc, rdl;
   int retVal = 0;
@@ -668,6 +716,7 @@ int Fieldbus::si_map_sdo(int slave) {
   if ((outputs_bo > 0) || (inputs_bo > 0)) retVal = 1;
   return retVal;
 }
+
 int Fieldbus::si_siiPDO(uint16 slave, uint8 t, int mapoffset, int bitoffset) {
   uint16 a, w, c, e, er;
   uint8 eectl;
@@ -768,6 +817,7 @@ int Fieldbus::si_siiPDO(uint16 slave, uint8 t, int mapoffset, int bitoffset) {
         &ctx_, slave); /* if eeprom control was previously pdi then restore */
   return totalsize;
 }
+
 int Fieldbus::si_map_sii(int slave) {
   int retVal = 0;
   int Tsize, outputs_bo, inputs_bo;
@@ -788,6 +838,7 @@ int Fieldbus::si_map_sii(int slave) {
   if ((outputs_bo > 0) || (inputs_bo > 0)) retVal = 1;
   return retVal;
 }
+
 void Fieldbus::si_sdo(int cnt) {
   int i, j;
 

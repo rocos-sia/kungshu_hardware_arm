@@ -53,6 +53,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        setcap_process,
-        start_arm_node_after_setcap
+        #setcap_process,
+        #start_arm_node_after_setcap
+        arm_node
     ])
