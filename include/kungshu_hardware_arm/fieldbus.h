@@ -28,6 +28,8 @@
 
 #include <string>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace KSH {
 class Fieldbus {
@@ -62,6 +64,8 @@ class Fieldbus {
 
   /// @brief Print all available adapters
   void PrintAvaliableAdapters();  // Print all available adapters
+
+  uint16 GetErrorCode(int id = 0) const;
 
   /// @brief Get Statusword of a slave
   /// @param id Slave ID (0-13)
@@ -123,6 +127,11 @@ class Fieldbus {
   /// @param value Mode of operation value to set
   void SetModeOfOperation(int id, int8 value);
 
+  Inputs* GetInputsPointer() { return inputs_;}
+  Outputs* GetOutputsPointer() { return outputs_;}
+
+  static void LoopOnce();
+
  private:
 
   /// @brief Convert data type to string
@@ -168,13 +177,15 @@ class Fieldbus {
   ec_ODlistt ODlist_{};
   ec_OElistt OElist_{};
 
-  Inputs inputs_[14] {};
-  Outputs outputs_[14] {};
-
-
-
+  Inputs inputs_[7] {};
+  Outputs outputs_[7] {};
 
   std::thread fieldbus_thread_;
+
+  // Used for synchronization two fieldbus
+  static std::mutex mtx_;
+  static std::condition_variable cv_;
+  static bool is_loop_time_up;
 
 };
 }  // namespace KSH

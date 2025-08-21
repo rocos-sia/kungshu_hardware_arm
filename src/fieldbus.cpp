@@ -57,6 +57,14 @@ bool Fieldbus::Start() {
   ecx_configdc(&ctx_);
   spdlog::info("done");
 
+  for (int i = 0; i < ctx_.slavecount; ++i) {
+
+    int8 cycle_time = 4;  // 4ms cycle time
+    int wkc = ecx_SDOwrite(&ctx_, i+1, 0x60c2, 01, TRUE, 1, &cycle_time, EC_TIMEOUTSAFE);
+  }
+
+
+
   spdlog::info("Waiting for all slaves in safe operational... ");
   ecx_statecheck(&ctx_, 0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 4);
   spdlog::info("done");
@@ -74,30 +82,38 @@ bool Fieldbus::Start() {
   ecx_writestate(&ctx_, 0);
   /* Poll the result ten times before giving up */
   for (int i = 0; i < 10; ++i) {
-    spdlog::info(".");
     // fieldbus_roundtrip(fieldbus);
     ecx_statecheck(&ctx_, 0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE / 10);
     if (slave->state == EC_STATE_OPERATIONAL) {
       spdlog::info(" all slaves are now operational\n");
-
-      fieldbus_thread_ = std::thread([=]() {
-        try {
-          while (true) {
-            Roundtrip();
-            std::this_thread::sleep_for(std::chrono::microseconds(4000));
-          }
-        } catch (const std::exception& e) {
-          spdlog::error("Exception in fieldbus thread: {}", e.what());
-        } catch (...) {
-          spdlog::error("Unknown exception in fieldbus thread");
-        }
-      });
-
-      return true;
+      break;
     }
   }
 
-  spdlog::info(" failed,");
+  if (ctx_.slavelist->state == EC_STATE_OPERATIONAL) {
+    spdlog::info("Starting fieldbus thread... ");
+
+    fieldbus_thread_ = std::thread([=]() {
+      try {
+        while (true) {
+          std::unique_lock<std::mutex> lock(mtx_);
+          cv_.wait(lock, [] { return is_loop_time_up; });
+
+          is_loop_time_up = false;
+          Roundtrip();
+          // std::this_thread::sleep_for(std::chrono::microseconds(4000));
+        }
+      } catch (const std::exception &e) {
+        spdlog::error("Exception in fieldbus thread: {}", e.what());
+      } catch (...) {
+        spdlog::error("Unknown exception in fieldbus thread");
+      }
+    });
+
+    return true;
+  }
+
+  spdlog::info(" failed");
   ecx_readstate(&ctx_);
   for (int i = 1; i <= ctx_.slavecount; ++i) {
     slave = ctx_.slavelist + i;
@@ -347,9 +363,7 @@ void Fieldbus::SetModeOfOperation(int id, int8 value) {
   outputs_[id].mode_of_operation = value;
 }
 
-void Fieldbus::SetCommand(int id, int8 value) {
-
-}
+void Fieldbus::SetCommand(int id, int8 value) {}
 
 std::string Fieldbus::dtype2string(uint16 data_type, uint16 bit_length) {
   char str[32] = {0};
@@ -937,4 +951,14 @@ int Fieldbus::slave_setup(ecx_contextt *ctx, uint16 slave) {
                          &map_1c13, EC_TIMEOUTSAFE);
 
   return retval;
+}
+
+std::mutex Fieldbus::mtx_{};
+std::condition_variable Fieldbus::cv_{};
+bool Fieldbus::is_loop_time_up{false};
+
+void Fieldbus::LoopOnce() {
+  std::lock_guard<std::mutex> lock(mtx_);
+  is_loop_time_up = true;
+  cv_.notify_all();
 }

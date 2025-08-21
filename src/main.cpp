@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
   //   osal_usleep(1000000);
   // }
 
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Hello, Kungshu Arm!");
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "ByeBye, Kungshu Arm!");
 
   return (0);
 }

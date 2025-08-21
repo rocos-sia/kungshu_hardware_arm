@@ -42,6 +42,10 @@ private:
 
   rclcpp::Publisher<kungshu_msgs::msg::ArmState>::SharedPtr state_publisher_;
   rclcpp::Subscription<kungshu_msgs::msg::ArmCommand>::SharedPtr command_subscriber_;
+
+  std::vector<Drive*> drivers_ {};
+
+  std::thread time_sync_thread_;  // Thread for time synchronization
 };
 
 }  // namespace KSH

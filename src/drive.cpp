@@ -4,50 +4,39 @@
 
 #include "kungshu_hardware_arm/drive.h"
 
-namespace KSH {
+using namespace KSH;
 
-Drive::Drive(Inputs* inputs, Outputs* outputs)
-    : inputs_(inputs), outputs_(outputs) {
+Drive::Drive(int id, Inputs* inputs, Outputs* outputs)
+    : id_(id), inputs_(inputs), outputs_(outputs) {
   // Initialize the drive with default values
-  id_ = 0;  // Default ID, can be set later
-
   controlword_.setAllFalse();
-  current_drive_state_ = DriveState::NotReadyToSwitchOn;
-  target_drive_state_ = DriveState::NotReadyToSwitchOn;
-
-  if (guard_thread_ && guard_thread_->joinable()) {
-    spdlog::warn("Guard thread is already running, stopping it first.");
-    is_guard_thread_running_ = false;
-    guard_thread_->join();
-  }
+  current_drive_state_ = DriveState::NA;
+  target_drive_state_ = DriveState::NA;
 
   is_guard_thread_running_ = true;
 
-  guard_thread_ = std::make_shared<std::thread>([=]() {
-    std::cout << "Drive Guard is running on thread "
-              << std::this_thread::get_id() << std::endl;
-    while (is_guard_thread_running_) {
-      current_drive_state_ = getDriverState(0);
+  AddToDriveGuard(this);
+}
 
-      if (current_drive_state_ == DriveState::Fault) {
-
-        //        is_guard_thread_running_ = false;
-        //        return;
-      }
-
-      if (conduct_state_change_) engageStateMachine();
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    std::cout << "Drive Guard thread is terminated." << std::endl;
-  });
-
-
+int8_t Drive::GetStatus() {
+  // current_drive_state_ = getDriverState(0);
+  switch (current_drive_state_) {
+    case DriveState::SwitchOnDisabled:
+      return 0;
+    case DriveState::OperationEnabled:
+      return 1;
+    case DriveState::Fault:
+      return -1;
+    default:
+      // spdlog::info("Unknown drive state: {}, statusword: {}", static_cast<int>(current_drive_state_), (int)inputs_->status_word);
+      return 3;
+  }
 }
 
 DriveState Drive::getDriverState(int id) {
   Statusword status;
   status.setFromRawStatusword(inputs_->status_word);
+  return status.getDriveState();
 }
 
 Controlword Drive::getNextStateTransitionControlword(
@@ -78,9 +67,10 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition15();
           break;
         default:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "PDO state transition not implemented for '"
-                    << std::endl;
+          // std::cerr << "Driver " << id_
+          //           << ": PDO state transition not implemented for '"
+          //           << std::endl;
+          break;
       }
       break;
 
@@ -90,8 +80,8 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition2();
           break;
         case DriveState::ReadyToSwitchOn:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "drive state has already been reached for '"
+          std::cerr << "Driver " << id_
+                    << ": drive state has already been reached for '"
                     << std::endl;
           break;
         case DriveState::SwitchedOn:
@@ -107,9 +97,10 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition15();
           break;
         default:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "PDO state transition not implemented for '"
-                    << std::endl;
+          // std::cerr << "Driver " << id_
+          //           << ": PDO state transition not implemented for '"
+          //           << std::endl;
+          break;
       }
       break;
 
@@ -122,8 +113,8 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition3();
           break;
         case DriveState::SwitchedOn:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "drive state has already been reached for '"
+          std::cerr << "Driver " << id_
+                    << ": drive state has already been reached for '"
                     << std::endl;
           break;
         case DriveState::OperationEnabled:
@@ -136,9 +127,10 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition15();
           break;
         default:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "PDO state transition not implemented for '"
-                    << std::endl;
+          // std::cerr << "Driver " << id_
+          //           << ": PDO state transition not implemented for '"
+          //           << std::endl;
+          break;
       }
       break;
 
@@ -154,8 +146,8 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition4();
           break;
         case DriveState::OperationEnabled:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "drive state has already been reached for '"
+          std::cerr << "Driver " << id_
+                    << ": drive state has already been reached for '"
                     << std::endl;
           break;
         case DriveState::QuickStopActive:
@@ -165,9 +157,10 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition15();
           break;
         default:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "PDO state transition not implemented for '"
-                    << std::endl;
+          // std::cerr << "Driver " << id_
+          //           << ": PDO state transition not implemented for '"
+          //           << std::endl;
+          break;
       }
       break;
 
@@ -186,23 +179,24 @@ Controlword Drive::getNextStateTransitionControlword(
           controlword.setStateTransition11();
           break;
         case DriveState::QuickStopActive:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "drive state has already been reached for '"
+          std::cerr << "Driver " << id_
+                    << ": drive state has already been reached for '"
                     << std::endl;
           break;
         case DriveState::Fault:
           controlword.setStateTransition15();
           break;
         default:
-          std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                    << "PDO state transition not implemented for '"
-                    << std::endl;
+          // std::cerr << "Driver " << id_
+          //           << ": PDO state transition not implemented for '"
+          //           << std::endl;
+          break;
       }
       break;
 
     default:
-      std::cerr << "[rocos::Drive::getNextStateTransitionControlword] "
-                << "PDO state cannot be reached for '" << std::endl;
+      std::cerr << "Driver " << id_
+                << ": PDO state cannot be reached for '" << std::endl;
   }
 
   return controlword;
@@ -300,8 +294,8 @@ bool Drive::setDriverState(const DriveState& driveState, bool waitForState) {
     if (duration_us.count() >
         150000) {  // wait for 100ms  TODO:
                    // configuration_.driveStateChangeMaxTimeout
-      std::cout << "It takes too long (" << duration_us.count() / 1000.0
-                << " ms) to switch state!" << std::endl;
+      // std::cout << "Drive " << id_ << " takes too long (" << duration_us.count() / 1000.0
+      //           << " ms) to switch state! current: " << (int)current_drive_state_ << " , target: " << (int)target_drive_state_ << std::endl;
       break;
     }
     // unlock the mutex during sleep time
@@ -315,4 +309,30 @@ bool Drive::setDriverState(const DriveState& driveState, bool waitForState) {
   return success;
 }
 
-}  // namespace KSH
+void Drive::AddToDriveGuard(Drive* drive) {
+  driver_list_.push_back(drive);  // Add driver to driver_list
+}
+
+std::atomic<bool> Drive::is_guard_thread_running_ = true;
+
+std::vector<Drive*> Drive::driver_list_ = {};
+
+std::thread Drive::guard_thread_ =
+    std::thread([]() {
+      spdlog::info("Drive Guard is running on thread.");
+
+      while (is_guard_thread_running_) {
+        for (auto driver : driver_list_) {
+          driver->current_drive_state_ = driver->getDriverState(0);
+
+          if (driver->current_drive_state_ == DriveState::Fault) {
+          }
+
+          if (driver->conduct_state_change_) driver->engageStateMachine();
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+      }
+
+      spdlog::info("Drive Guard thread is terminated.");
+    });
