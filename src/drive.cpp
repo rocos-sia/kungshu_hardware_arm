@@ -36,18 +36,23 @@ int8_t Drive::GetStatus() {
 DriveState Drive::getDriverState(int id) {
   Statusword status;
   status.setFromRawStatusword(inputs_->status_word);
+
   return status.getDriveState();
 }
 
 Controlword Drive::getNextStateTransitionControlword(
     const DriveState& requestedDriveState,
     const DriveState& currentDriveState) {
+
+  // spdlog::info("Drive: {}, requested state: {}, current state: {}",id_, static_cast<int>(requestedDriveState), static_cast<int>(currentDriveState));
+
   Controlword controlword;
   controlword.setAllFalse();
   switch (requestedDriveState) {
     case DriveState::SwitchOnDisabled:
       switch (currentDriveState) {
         case DriveState::SwitchOnDisabled:
+          spdlog::info("SwitchOnDisabled is already reached for drive {}", id_);
           std::cerr << "[getNextStateTransitionControlword] "
                     << "drive state has already been reached" << std::endl;
           break;

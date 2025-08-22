@@ -144,7 +144,9 @@ int Fieldbus::Roundtrip() {
     max_time_ = roundtrip_time_;
 
   memcpy(inputs_, ctx_.slavelist[0].inputs, ctx_.slavelist[0].Ibytes);
-  memcpy(outputs_, ctx_.slavelist[0].outputs, ctx_.slavelist[0].Obytes);
+  memcpy(ctx_.slavelist[0].outputs, outputs_, ctx_.slavelist[0].Obytes);
+
+  spdlog::info("Input Bytes: {}, Output Bytes: {}", sizeof(inputs_), sizeof(outputs_));
 
   return wkc;
 }
@@ -957,7 +959,7 @@ std::mutex Fieldbus::mtx_{};
 std::condition_variable Fieldbus::cv_{};
 bool Fieldbus::is_loop_time_up{false};
 
-void Fieldbus::LoopOnce() {
+void Fieldbus::LoopOnce() { 
   std::lock_guard<std::mutex> lock(mtx_);
   is_loop_time_up = true;
   cv_.notify_all();
