@@ -96,12 +96,15 @@ bool Fieldbus::Start() {
     fieldbus_thread_ = std::thread([=]() {
       try {
         while (true) {
-          std::unique_lock<std::mutex> lock(mtx_);
-          cv_.wait(lock, [] { return is_loop_time_up; });
+          // std::unique_lock<std::mutex> lock(mtx_);
+          // cv_.wait(lock, [] { return is_loop_time_up; });
+          // is_loop_time_up = false;
 
-          is_loop_time_up = false;
+          sem_wait(&loop_sem_);
+
+
           Roundtrip();
-          // std::this_thread::sleep_for(std::chrono::microseconds(4000));
+          std::this_thread::sleep_for(std::chrono::microseconds(4000));
         }
       } catch (const std::exception &e) {
         spdlog::error("Exception in fieldbus thread: {}", e.what());
@@ -582,6 +585,7 @@ std::string Fieldbus::SDO2string(uint16 slave, uint16 index, uint8 subidx,
     return str;
   }
 }
+
 int Fieldbus::si_PDOassign(uint16 slave, uint16 PDOassign, int mapoffset,
                            int bitoffset) {
   uint16 idxloop, nidx, subidxloop, rdat, idx, subidx;
@@ -955,12 +959,37 @@ int Fieldbus::slave_setup(ecx_contextt *ctx, uint16 slave) {
   return retval;
 }
 
-std::mutex Fieldbus::mtx_{};
-std::condition_variable Fieldbus::cv_{};
-bool Fieldbus::is_loop_time_up{false};
-
 void Fieldbus::LoopOnce() {
-  std::lock_guard<std::mutex> lock(mtx_);
-  is_loop_time_up = true;
-  cv_.notify_all();
+  // std::lock_guard<std::mutex> lock(mtx_);
+  // is_loop_time_up = true;
+  // cv_.notify_all();
+
+  int val = 0;
+  sem_getvalue(&loop_sem_, &val);
+  if (val == 0){
+    sem_post(&loop_sem_);
+    sem_post(&loop_sem_);
+  }
+  else if (val == 1) {
+    sem_post(&loop_sem_);
+  }
+
+}
+
+sem_t Fieldbus::loop_sem_ {};
+// Initialize semaphore
+namespace {
+
+  bool init_sem() {
+    if (sem_init(&Fieldbus::loop_sem_, 0, 0) == -1) {
+      spdlog::info("Failed to initialize semaphore");
+      return false;
+    }
+
+    spdlog::info("Initialized semaphore");
+        return true;
+  }
+
+  const bool sem_init_ = init_sem();
+
 }

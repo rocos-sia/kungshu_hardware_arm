@@ -35,6 +35,7 @@ target_link_libraries(arm_node
         fmt::fmt
         spdlog::spdlog
         soem
+        rt
 )
 
 ament_target_dependencies(arm_node

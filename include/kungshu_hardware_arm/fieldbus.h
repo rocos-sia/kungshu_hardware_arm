@@ -28,6 +28,9 @@
 
 #include <string>
 #include <thread>
+
+#include <semaphore.h>
+
 #include <mutex>
 #include <condition_variable>
 
@@ -36,6 +39,13 @@ class Fieldbus {
  public:
 
   explicit Fieldbus(const std::string &ifname) : ifname_(ifname) {}
+  ~Fieldbus() {
+    if (is_initialized_) {
+      Close();
+    }
+
+    sem_destroy(&loop_sem_);
+  }
 
   enum ObjType { OTYPE_VAR = 0x7, OTYPE_ARRAY = 0x8, OTYPE_RECORD = 0x9 };
 
@@ -183,9 +193,12 @@ class Fieldbus {
   std::thread fieldbus_thread_;
 
   // Used for synchronization two fieldbus
-  static std::mutex mtx_;
-  static std::condition_variable cv_;
-  static bool is_loop_time_up;
+  // static std::mutex mtx_;
+  // static std::condition_variable cv_;
+  // static bool is_loop_time_up;
+
+public:
+  static sem_t loop_sem_;
 
 };
 }  // namespace KSH
