@@ -50,27 +50,44 @@ class Drive {
 public:
   explicit Drive(int id, Inputs* inputs, Outputs* outputs);
 
-  inline uint16_t GetStatusWord() { return inputs_->status_word; }
+  inline uint16_t GetStatusWordRaw() { return inputs_->status_word; }
 
-  inline int32_t GetPosition() { return inputs_->position_actual_value; }
+  inline int32_t GetPositionRaw() { return inputs_->position_actual_value; }
 
-  inline int32_t GetVelocity()  { return inputs_->velocity_actual_value; }
+  inline int32_t GetVelocityRaw()  { return inputs_->velocity_actual_value; }
 
-  inline int16_t GetTorque() { return inputs_->torque_actual_value; }
+  inline int16_t GetTorqueRaw() { return inputs_->torque_actual_value; }
 
-  inline int32_t GetAuxiliaryPosition() { return inputs_->auxiliary_position_actual_value; }
+  inline int32_t GetAuxiliaryPositionRaw() { return inputs_->auxiliary_position_actual_value; }
 
-  inline int16_t GetAnalogInput() { return inputs_->analog_input; }
+  inline int16_t GetAnalogInputRaw() { return inputs_->analog_input; }
 
-  inline void SetControlWord(uint16_t value) { outputs_->control_word = value; }
+  inline void SetControlWordRaw(uint16_t value) { outputs_->control_word = value; }
 
-  inline void SetModeOfOperation(int8_t value) { outputs_->mode_of_operation = value; }
+  inline void SetModeOfOperationRaw(int8_t value) { outputs_->mode_of_operation = value; }
 
-  inline void SetTargetPosition(int32_t value) { outputs_->target_position = value; }
+  inline void SetTargetPositionRaw(int32_t value) { outputs_->target_position = value; }
 
-  inline void SetTargetVelocity(int32_t value) { outputs_->target_velocity = value; }
+  inline void SetTargetVelocityRaw(int32_t value) { outputs_->target_velocity = value; }
 
-  inline void SetTargetTorque(int16_t value) { outputs_->target_torque = value; }
+  inline void SetTargetTorqueRaw(int16_t value) { outputs_->target_torque = value; }
+
+
+  inline double GetPosition() {return inputs_->position_actual_value * cnt2rad_;}
+
+  inline double GetVelocity() {return inputs_->velocity_actual_value * cnt2rad_;}
+
+  inline double GetTorque() {return inputs_->torque_actual_value * cnt2nm_;} // mNm to Nm
+
+  inline double GetLoadTorque() {return (inputs_->auxiliary_position_actual_value / 1000.0 - t_0_ ) * t_k_;}
+
+  inline void SetTargetPosition(double value) {outputs_->target_position = static_cast<int32_t>(value / cnt2rad_);}
+
+  inline void SetTargetVelocity(double value) {outputs_->target_velocity = static_cast<int32_t>(value / cnt2rad_);}
+
+  inline void SetTargetTorque(double value) {outputs_->target_torque = static_cast<int16_t>(value / cnt2nm_);}
+
+
 
   int8_t GetStatus();
 
@@ -106,6 +123,17 @@ public:
 
   bool setDriverState(const DriveState &driveState, bool waitForState = true);
 
+
+  void SetDriverParam(double cnt_per_round, double ratio, double rate_torque, double t_0, double t_k) {
+    cnt_per_round_ = cnt_per_round;
+    cnt2rad_ = 2 * M_PI / cnt_per_round_;
+    ratio_ = ratio;
+    rate_torque_ = rate_torque;
+    cnt2nm_ = rate_torque_ / 1000.0 * ratio_; // mNm to Nm
+    t_0_ = t_0;
+    t_k_ = t_k;
+  }
+
 private:
 
   int id_ {0}; // 关节名称
@@ -133,6 +161,17 @@ private:
   static std::vector<Drive*> driver_list_; // 所有驱动器列表
 
   static void AddToDriveGuard(Drive* drive);
+
+  double cnt_per_round_ { 131072.0 }; // 编码器每转的计数
+  double cnt2rad_ { 2 * M_PI / cnt_per_round_ }; // 编码器计数转弧度
+
+  double ratio_ {100.0};
+
+  double rate_torque_ { 0.7 }; // unit: Nm
+  double cnt2nm_ { rate_torque_ / 1000.0 * ratio_ }; // 编码器计数转力矩
+
+  double t_0_ { 2.50 }; // Torque sensor zero offset in V
+  double t_k_ { 48.0 }; // Torque sensor sensitivity in Nm / V
 
 
 };

@@ -3,9 +3,9 @@
 <package format="3">
   <name>kungshu_hardware_arm</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="992534544@qq.com">think</maintainer>
-  <license>TODO: License declaration</license>
+  <description>kungshu_hardware_arm provides original interface for high frequency control of arm.</description>
+  <maintainer email="luoyang@sia.cn">Yang Luo</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

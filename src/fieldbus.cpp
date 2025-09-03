@@ -273,7 +273,7 @@ void Fieldbus::PrintAvaliableAdapters() {
   fmt::print("Adapters:\n");
 }
 
-uint16 Fieldbus::GetStatusWord(int id) const {
+uint16 Fieldbus::GetStatusWordRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -283,7 +283,7 @@ uint16 Fieldbus::GetStatusWord(int id) const {
   return inputs_[id].status_word;
 }
 
-int32 Fieldbus::GetPosition(int id) const {
+int32 Fieldbus::GetPositionRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -293,7 +293,7 @@ int32 Fieldbus::GetPosition(int id) const {
   return inputs_[id].position_actual_value;
 }
 
-int32 Fieldbus::GetVelocity(int id) const {
+int32 Fieldbus::GetVelocityRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -303,7 +303,7 @@ int32 Fieldbus::GetVelocity(int id) const {
   return inputs_[id].velocity_actual_value;
 }
 
-int16 Fieldbus::GetTorque(int id) const {
+int16 Fieldbus::GetTorqueRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -313,7 +313,7 @@ int16 Fieldbus::GetTorque(int id) const {
   return inputs_[id].torque_actual_value;
 }
 
-int32 Fieldbus::GetAuxiliaryPosition(int id) const {
+int32 Fieldbus::GetAuxiliaryPositionRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -323,7 +323,7 @@ int32 Fieldbus::GetAuxiliaryPosition(int id) const {
   return inputs_[id].auxiliary_position_actual_value;
 }
 
-int16 Fieldbus::GetAnalogInput(int id) const {
+int16 Fieldbus::GetAnalogInputRaw(int id) const {
   if (id < 0 || id >= 14) {
     // throw std::out_of_range("ID must be between 0 and 13");
     spdlog::warn("ID must be between 0 and 13, returning 0");
@@ -333,28 +333,28 @@ int16 Fieldbus::GetAnalogInput(int id) const {
   return inputs_[id].analog_input;
 }
 
-void Fieldbus::SetControlWord(int id, uint16 value) {
+void Fieldbus::SetControlWordRaw(int id, uint16 value) {
   if (id < 0 || id >= 14) {
     spdlog::warn("ID must be between 0 and 13, returning 0");
   }
   outputs_[id].control_word = value;
 }
 
-void Fieldbus::SetTargetPosition(int id, int32 value) {
+void Fieldbus::SetTargetPositionRaw(int id, int32 value) {
   if (id < 0 || id >= 14) {
     spdlog::warn("ID must be between 0 and 13, returning 0");
   }
   outputs_[id].target_position = value;
 }
 
-void Fieldbus::SetTargetVelocity(int id, int32 value) {
+void Fieldbus::SetTargetVelocityRaw(int id, int32 value) {
   if (id < 0 || id >= 14) {
     spdlog::warn("ID must be between 0 and 13, returning 0");
   }
   outputs_[id].target_velocity = value;
 }
 
-void Fieldbus::SetTargetTorque(int id, int16 value) {
+void Fieldbus::SetTargetTorqueRaw(int id, int16 value) {
   if (id < 0 || id >= 14) {
     spdlog::warn("ID must be between 0 and 13, returning 0");
   }

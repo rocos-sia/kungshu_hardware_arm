@@ -80,37 +80,37 @@ class Fieldbus {
   /// @brief Get Statusword of a slave
   /// @param id Slave ID (0-13)
   /// @return Status word of the slave
-  uint16 GetStatusWord(int id = 0) const;
+  uint16 GetStatusWordRaw(int id = 0) const;
 
   /// @brief Get Position of a slave
   /// @param id Slave ID (0-13)
   /// @return Position of the slave
-  int32 GetPosition(int id = 0) const;
+  int32 GetPositionRaw(int id = 0) const;
 
   /// @brief Get Velocity of a slave
   /// @param id Slave ID (0-13)
   /// @return Velocity of the slave
-  int32 GetVelocity(int id = 0) const;
+  int32 GetVelocityRaw(int id = 0) const;
 
   /// @brief Get Torque of a slave
   /// @param id Slave ID (0-13)
   /// @return Torque of the slave
-  int16 GetTorque(int id = 0) const;
+  int16 GetTorqueRaw(int id = 0) const;
 
   /// @brief Get Auxiliary Position of a slave
   /// @param id Slave ID (0-13)
   /// @return Auxiliary Position of the slave
-  int32 GetAuxiliaryPosition(int id = 0) const;
+  int32 GetAuxiliaryPositionRaw(int id = 0) const;
 
   /// @brief Get Analog Input of a slave (torque sensor)
   /// @param id Slave ID (0-13)
   /// @return Analog Input of the slave
-  int16 GetAnalogInput(int id = 0) const;
+  int16 GetAnalogInputRaw(int id = 0) const;
 
   /// @brief Set Control Word of a slave
   /// @param id Slave ID (0-13)
   /// @param value Control word value to set
-  void SetControlWord(int id, uint16 value);
+  void SetControlWordRaw(int id, uint16 value);
 
   /// @brief Set Command of a slave
   /// @param id Slave ID (0-13)
@@ -120,17 +120,17 @@ class Fieldbus {
   /// @brief Set Target Position of a slave
   /// @param id Slave ID (0-13)
   /// @param value Target position value to set
-  void SetTargetPosition(int id, int32 value);
+  void SetTargetPositionRaw(int id, int32 value);
 
   /// @brief Set Target Velocity of a slave
   /// @param id Slave ID (0-13)
   /// @param value Target velocity value to set
-  void SetTargetVelocity(int id, int32 value);
+  void SetTargetVelocityRaw(int id, int32 value);
 
   /// @brief Set Target Torque of a slave
   /// @param id Slave ID (0-13)
   /// @param value Target torque value to set
-  void SetTargetTorque(int id, int16 value);
+  void SetTargetTorqueRaw(int id, int16 value);
 
   /// @brief Set Mode of Operation of a slave
   /// @param id Slave ID (0-13)
