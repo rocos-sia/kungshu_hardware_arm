@@ -297,7 +297,7 @@ bool Drive::setDriverState(const DriveState& driveState, bool waitForState) {
     auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::system_clock::now() - driveStateChangeStartTimePoint);
     if (duration_us.count() >
-        150000) {  // wait for 100ms  TODO:
+        300000) {  // wait for 100ms  TODO:
                    // configuration_.driveStateChangeMaxTimeout
       // std::cout << "Drive " << id_ << " takes too long (" << duration_us.count() / 1000.0
       //           << " ms) to switch state! current: " << (int)current_drive_state_ << " , target: " << (int)target_drive_state_ << std::endl;

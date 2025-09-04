@@ -67,16 +67,18 @@ ArmNode::ArmNode() : Node("arm_node") {
 
 
   state_publisher_ = this->create_publisher<kungshu_msgs::msg::ArmState>(
-      "arm_state", 10);
+      "states", 10);
 
   command_subscriber_ =
       this->create_subscription<kungshu_msgs::msg::ArmCommand>(
-          "arm_command", 10,
+          "commands", 10,
           std::bind(&ArmNode::command_callback, this, std::placeholders::_1));
 
 
   time_sync_thread_ = std::thread([this]() {
     while (rclcpp::ok()) {
+
+      auto time_start = std::chrono::high_resolution_clock::now();
 
       kungshu_msgs::msg::ArmState state;
 
@@ -95,9 +97,20 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       Fieldbus::LoopOnce();
 
+
+      auto time_end = std::chrono::high_resolution_clock::now();
+
+      int elasped_us = std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start).count();
+
       // Here you can implement time synchronization logic if needed
       // For example, you can read the current time and publish it
-      rclcpp::sleep_for(std::chrono::microseconds(4000));
+      if (elasped_us < 4000 - 10) {
+        rclcpp::sleep_for(std::chrono::microseconds(4000 - 10 - elasped_us));
+      }
+      else {
+        spdlog::warn("ArmNode loop is too slow: {} us", elasped_us);
+      }
+
     }
   });
 
