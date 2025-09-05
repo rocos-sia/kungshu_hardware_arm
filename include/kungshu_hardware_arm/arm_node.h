@@ -20,11 +20,19 @@
 #ifndef KSH_ARM_NODE_H
 #define KSH_ARM_NODE_H
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <kungshu_hardware_arm/fieldbus.h>
 
-#include <kungshu_msgs/msg/arm_command.hpp>
+#include <kungshu_msgs/msg/arm_servo_command.hpp>
 #include <kungshu_msgs/msg/arm_state.hpp>
-#include <rclcpp/rclcpp.hpp>
+
+#include <kungshu_msgs/srv/set_enable.hpp>
+#include <kungshu_msgs/srv/set_mode_of_operation.hpp>
+
+#include  <ruckig/ruckig.hpp>
+
+
 
 namespace KSH {
 
@@ -33,7 +41,7 @@ class ArmNode : public rclcpp::Node {
   ArmNode();
 
 private:
-  void command_callback(const kungshu_msgs::msg::ArmCommand& msg);
+  void command_callback(const kungshu_msgs::msg::ArmServoCommand& msg);
 
 
  private:
@@ -41,11 +49,22 @@ private:
   std::shared_ptr<Fieldbus> right_bus_;  // right arm
 
   rclcpp::Publisher<kungshu_msgs::msg::ArmState>::SharedPtr state_publisher_;
-  rclcpp::Subscription<kungshu_msgs::msg::ArmCommand>::SharedPtr command_subscriber_;
+  rclcpp::Subscription<kungshu_msgs::msg::ArmServoCommand>::SharedPtr command_subscriber_;
+
+  rclcpp::Service<kungshu_msgs::srv::SetEnable>::SharedPtr enable_srv_;
+  rclcpp::Service<kungshu_msgs::srv::SetModeOfOperation>::SharedPtr mode_srv_;
 
   std::vector<Drive*> drivers_ {};
 
   std::thread time_sync_thread_;  // Thread for time synchronization
+
+  ruckig::Ruckig<14> otg_{0.004}; // 4ms control period
+  ruckig::InputParameter<14> input_;
+  ruckig::OutputParameter<14> output_;
+
+
+
+
 };
 
 }  // namespace KSH

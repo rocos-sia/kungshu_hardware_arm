@@ -61,18 +61,57 @@ ArmNode::ArmNode() : Node("arm_node") {
     drivers_[11]->SetDriverParam(131072.0, 100.0, 0.3, 2.5362, 7.3970); // ST5-1-TK-17-25183328
     drivers_[12]->SetDriverParam(131072.0, 100.0, 0.3, 2.4765, 7.5133); // ST5-1-TK-17-25193936
     drivers_[13]->SetDriverParam(131072.0, 100.0, 0.3, 2.4585, 7.3354); // ST5-1-TK-17-25193942
-
   }
 
+  for (int i = 0; i < 14; i++) {
+    drivers_[i]->SetModeOfOperationRaw(8); // Cyclic Synchronous Position Mode
+  }
 
 
   state_publisher_ = this->create_publisher<kungshu_msgs::msg::ArmState>(
       "states", 10);
 
   command_subscriber_ =
-      this->create_subscription<kungshu_msgs::msg::ArmCommand>(
+      this->create_subscription<kungshu_msgs::msg::ArmServoCommand>(
           "commands", 10,
           std::bind(&ArmNode::command_callback, this, std::placeholders::_1));
+
+  enable_srv_ = this->create_service<kungshu_msgs::srv::SetEnable>("set_enble_serivce",
+    [this](const std::shared_ptr<kungshu_msgs::srv::SetEnable::Request> request,
+           std::shared_ptr<kungshu_msgs::srv::SetEnable::Response> response) {
+
+      spdlog::info("Set Enable Service: {}", request->enable);
+
+      bool success = true;
+
+      if (request->enable) {
+        for (int i = 0; i < 14; i++) {
+          drivers_[i]->SetTargetPosition(drivers_[i]->GetPosition());
+          drivers_[i]->SetTargetVelocity(0);
+          drivers_[i]->SetTargetTorque(0);
+          drivers_[i]->setDriverState(DriveState::OperationEnabled , false);
+        }
+      }
+      else {
+        for (int i = 0; i < 14; i++) {
+          drivers_[i]->setDriverState(DriveState::SwitchOnDisabled , false);
+        }
+      }
+
+      response->success = success;
+    });
+
+
+  mode_srv_ = this->create_service<kungshu_msgs::srv::SetModeOfOperation>("set_mode_service",
+    [this](const std::shared_ptr<kungshu_msgs::srv::SetModeOfOperation::Request> request,
+           std::shared_ptr<kungshu_msgs::srv::SetModeOfOperation::Response> response) {
+      bool success = true;
+      for (int i = 0; i < 14; i++) {
+        drivers_[i]->SetModeOfOperationRaw(request->mode);
+      }
+      response->success = success;
+    });
+
 
 
   time_sync_thread_ = std::thread([this]() {
@@ -104,8 +143,8 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       // Here you can implement time synchronization logic if needed
       // For example, you can read the current time and publish it
-      if (elasped_us < 4000 - 10) {
-        rclcpp::sleep_for(std::chrono::microseconds(4000 - 10 - elasped_us));
+      if (elasped_us < 4000) {
+        rclcpp::sleep_for(std::chrono::microseconds(4000 - elasped_us));
       }
       else {
         spdlog::warn("ArmNode loop is too slow: {} us", elasped_us);
@@ -118,15 +157,21 @@ ArmNode::ArmNode() : Node("arm_node") {
 
 }
 
-void ArmNode::command_callback(const kungshu_msgs::msg::ArmCommand& msg) {
+void ArmNode::command_callback(const kungshu_msgs::msg::ArmServoCommand& msg) {
   // Process the command message and send it to the appropriate bus
   // This is where you would implement the logic to handle arm commands
   for (int i = 0; i < 14; i++) {
-    drivers_[i]->SetModeOfOperationRaw(msg.mode[i]);
-    drivers_[i]->SetTargetPosition(msg.q_d[i]);
-    drivers_[i]->SetTargetVelocity(msg.dq_d[i]);
-    drivers_[i]->SetTargetTorque(msg.tau_d[i]);
-    drivers_[i]->SetCommand(msg.command[i]);
+    switch (drivers_[i]->GetModeOfOperationRaw()) {
+      case 8:
+        drivers_[i]->SetTargetPosition(msg.servo_cmd[i]);
+        break;
+      case 9:
+        drivers_[i]->SetTargetVelocity(msg.servo_cmd[i]);
+        break;
+      case 10:
+        drivers_[i]->SetTargetTorque(msg.servo_cmd[i]);
+        break;
+    }
   }
 }
 

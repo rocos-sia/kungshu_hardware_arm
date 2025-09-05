@@ -21,6 +21,7 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/soem-2.0.
 find_package(soem REQUIRED)
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(ruckig REQUIRED)
 
 
 add_executable(arm_node src/main.cpp src/drive.cpp src/fieldbus.cpp src/arm_node.cpp)
@@ -34,6 +35,7 @@ target_compile_features(arm_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and 
 target_link_libraries(arm_node
         fmt::fmt
         spdlog::spdlog
+        ruckig::ruckig
         soem
         rt
 )

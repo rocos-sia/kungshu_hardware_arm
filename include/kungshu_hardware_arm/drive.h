@@ -65,6 +65,7 @@ public:
   inline void SetControlWordRaw(uint16_t value) { outputs_->control_word = value; }
 
   inline void SetModeOfOperationRaw(int8_t value) { outputs_->mode_of_operation = value; }
+  inline int8_t GetModeOfOperationRaw() { return outputs_->mode_of_operation; }
 
   inline void SetTargetPositionRaw(int32_t value) { outputs_->target_position = value; }
 
