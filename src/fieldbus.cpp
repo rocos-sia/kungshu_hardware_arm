@@ -57,11 +57,11 @@ bool Fieldbus::Start() {
   ecx_configdc(&ctx_);
   spdlog::info("done");
 
-  for (int i = 0; i < ctx_.slavecount; ++i) {
-
-    int8 cycle_time = 4;  // 4ms cycle time
-    int wkc = ecx_SDOwrite(&ctx_, i+1, 0x60c2, 01, TRUE, 1, &cycle_time, EC_TIMEOUTSAFE);
-  }
+  // for (int i = 0; i < ctx_.slavecount; ++i) {
+  //
+  //   int8 cycle_time = 4;  // 4ms cycle time
+  //   int wkc = ecx_SDOwrite(&ctx_, i+1, 0x60c2, 01, TRUE, 1, &cycle_time, EC_TIMEOUTSAFE);
+  // }
 
 
 
@@ -922,6 +922,13 @@ int Fieldbus::slave_setup(ecx_contextt *ctx, uint16 slave) {
   uint32 u32val;
 
   retval = 0;
+
+  int8 cycle_time = 4;  // 4ms cycle time
+  retval += ecx_SDOwrite(ctx, slave, 0x60c2, 01, TRUE, 1, &cycle_time, EC_TIMEOUTSAFE);
+
+
+
+
 
   uint16 map_1607[11] = {
       0x0005, 0x0010, 0x6040,  // Control Word

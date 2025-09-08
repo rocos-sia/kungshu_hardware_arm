@@ -29,6 +29,7 @@
 
 #include <kungshu_msgs/srv/set_enable.hpp>
 #include <kungshu_msgs/srv/set_mode_of_operation.hpp>
+#include <kungshu_msgs/srv/move_j.hpp>
 
 #include  <ruckig/ruckig.hpp>
 
@@ -39,6 +40,9 @@ namespace KSH {
 class ArmNode : public rclcpp::Node {
  public:
   ArmNode();
+
+  void MoveToPosition(const std::array<double, 14>& target_pos, const std::array<double, 14>& max_vel, const std::array<double, 14>& max_acc);
+
 
 private:
   void command_callback(const kungshu_msgs::msg::ArmServoCommand& msg);
@@ -54,6 +58,8 @@ private:
   rclcpp::Service<kungshu_msgs::srv::SetEnable>::SharedPtr enable_srv_;
   rclcpp::Service<kungshu_msgs::srv::SetModeOfOperation>::SharedPtr mode_srv_;
 
+  rclcpp::Service<kungshu_msgs::srv::MoveJ>::SharedPtr move_j_srv_;
+
   std::vector<Drive*> drivers_ {};
 
   std::thread time_sync_thread_;  // Thread for time synchronization
@@ -63,7 +69,7 @@ private:
   ruckig::OutputParameter<14> output_;
 
 
-
+  std::atomic<bool> is_running_ = false;
 
 };
 

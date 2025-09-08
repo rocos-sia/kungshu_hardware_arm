@@ -23,5 +23,5 @@ $ su
 Specify the nwork interface to use:
 
 ```bash
-$ ros2 run <package_name> <node_name> --ros-args -p left:=<interface> --ros-args -p right:=<interface>
+$ ros2 run <package_name> <node_name> --ros-args __ns:=/arm -p left:=<interface> --ros-args -p right:=<interface>
 ```

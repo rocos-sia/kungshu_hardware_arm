@@ -112,6 +112,28 @@ ArmNode::ArmNode() : Node("arm_node") {
       response->success = success;
     });
 
+  move_j_srv_ = this->create_service<kungshu_msgs::srv::MoveJ>(
+    "movej_service",
+        [this](const std::shared_ptr<kungshu_msgs::srv::MoveJ::Request> request,
+                   std::shared_ptr<kungshu_msgs::srv::MoveJ::Response> response) {
+
+          for (int i = 0; i < 14; i++) {
+            spdlog::info("Received move j service request");
+
+              std::array<double, 14> target_pos{}, max_vel{}, max_acc{};
+
+              for (int i = 0; i < 14; i++) {
+                target_pos[i] = request->pos[i];
+                max_vel[i] = request->vel[i];
+                max_acc[i] = request->acc[i];
+              }
+
+              MoveToPosition(target_pos, max_vel, max_acc);
+          }
+
+        }
+  );
+
 
 
   time_sync_thread_ = std::thread([this]() {
@@ -134,6 +156,25 @@ ArmNode::ArmNode() : Node("arm_node") {
       state_publisher_->publish(state);
 
 
+      if (is_running_) {
+        if (otg_.update(input_, output_) == ruckig::Result::Working) {
+
+          for (int i = 0; i < 14; i++) {
+              drivers_[i]->SetTargetPosition(output_.new_position[i]);
+           }
+
+            output_.pass_to_input(input_);
+        }
+        else {
+          is_running_ = false;
+        }
+
+      }
+
+
+
+
+
       Fieldbus::LoopOnce();
 
 
@@ -154,6 +195,28 @@ ArmNode::ArmNode() : Node("arm_node") {
   });
 
 
+
+}
+void ArmNode::MoveToPosition(const std::array<double, 14>& target_pos,
+                             const std::array<double, 14>& max_vel,
+                             const std::array<double, 14>& max_acc) {
+  for (int i = 0; i < 14; i++) {
+    spdlog::info("Joint {}: pos->{}, target_pos->{}, max_vel->{}, max_acc->{}",i, drivers_[i]->GetPosition(), target_pos[i], max_vel[i], max_acc[i]);
+    input_.current_position[i] = drivers_[i]->GetPosition();
+    input_.current_velocity[i] = 0.0;
+    input_.current_acceleration[i] = 0.0;
+
+    input_.target_position[i] = target_pos[i];
+    input_.target_velocity[i] = 0.0;
+    input_.target_acceleration[i] = 0.0;
+    input_.max_velocity[i] = max_vel[i];
+    input_.max_acceleration[i] = max_acc[i];
+    input_.max_jerk[i] = max_acc[i] * 10;
+  }
+
+  input_.synchronization = ruckig::Synchronization::None;
+
+  is_running_ = true;
 
 }
 
