@@ -94,7 +94,6 @@ bool Fieldbus::Start() {
     spdlog::info("Starting fieldbus thread... ");
 
     fieldbus_thread_ = std::thread([=]() {
-      try {
         while (true) {
           // std::unique_lock<std::mutex> lock(mtx_);
           // cv_.wait(lock, [] { return is_loop_time_up; });
@@ -102,15 +101,8 @@ bool Fieldbus::Start() {
 
           sem_wait(&loop_sem_);
 
-
           Roundtrip();
-          std::this_thread::sleep_for(std::chrono::microseconds(4000));
         }
-      } catch (const std::exception &e) {
-        spdlog::error("Exception in fieldbus thread: {}", e.what());
-      } catch (...) {
-        spdlog::error("Unknown exception in fieldbus thread");
-      }
     });
 
     return true;
@@ -926,7 +918,9 @@ int Fieldbus::slave_setup(ecx_contextt *ctx, uint16 slave) {
   int8 cycle_time = 4;  // 4ms cycle time
   retval += ecx_SDOwrite(ctx, slave, 0x60c2, 01, TRUE, 1, &cycle_time, EC_TIMEOUTSAFE);
 
-
+  int size =1;
+  ecx_SDOread(ctx, slave, 0x60c2, 01, FALSE, &size , &u8val, EC_TIMEOUTRXM);
+  spdlog::info("slave {} 0x60C2 is: {}", slave, u8val);
 
 
 

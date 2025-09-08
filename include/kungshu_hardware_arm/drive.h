@@ -128,7 +128,7 @@ public:
   void SetDriverParam(double cnt_per_round, double ratio, double rate_torque, double t_0, double t_k) {
     cnt_per_round_ = cnt_per_round;
     cnt2rad_ = 2 * M_PI / cnt_per_round_;
-    spdlog::info("driver {} cnt2rad: {}", id_, cnt2rad_);
+    // spdlog::info("driver {} cnt2rad: {}", id_, cnt2rad_);
 
     ratio_ = ratio;
     rate_torque_ = rate_torque;

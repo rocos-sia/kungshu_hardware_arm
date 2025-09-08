@@ -171,10 +171,6 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       }
 
-
-
-
-
       Fieldbus::LoopOnce();
 
 
@@ -184,8 +180,8 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       // Here you can implement time synchronization logic if needed
       // For example, you can read the current time and publish it
-      if (elasped_us < 4000) {
-        rclcpp::sleep_for(std::chrono::microseconds(4000 - elasped_us));
+      if (elasped_us < 4000-10) {
+        std::this_thread::sleep_for(std::chrono::microseconds(4000 - 10 - elasped_us));
       }
       else {
         spdlog::warn("ArmNode loop is too slow: {} us", elasped_us);
