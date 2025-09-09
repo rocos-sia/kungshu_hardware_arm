@@ -63,18 +63,20 @@ ArmNode::ArmNode() : Node("arm_node") {
     drivers_[13]->SetDriverParam(131072.0, 100.0, 0.3, 2.4585, 7.3354); // ST5-1-TK-17-25193942
   }
 
-  for (int i = 0; i < 14; i++) {
-    drivers_[i]->SetModeOfOperationRaw(8); // Cyclic Synchronous Position Mode
-  }
+
+  rclcpp::QoS qos_best_effort(10);
+  qos_best_effort.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+  // （可选）设置Durability为VOLATILE（不缓存消息，仅发给在线订阅者）
+  qos_best_effort.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
 
 
   state_publisher_ = this->create_publisher<kungshu_msgs::msg::ArmState>(
-      "states", 10);
+      "states", qos_best_effort);
 
-  command_subscriber_ =
-      this->create_subscription<kungshu_msgs::msg::ArmServoCommand>(
-          "commands", 10,
-          std::bind(&ArmNode::command_callback, this, std::placeholders::_1));
+  // command_subscriber_ =
+  //     this->create_subscription<kungshu_msgs::msg::ArmServoCommand>(
+  //         "commands", qos_best_effort,
+  //         std::bind(&ArmNode::command_callback, this, std::placeholders::_1));
 
   enable_srv_ = this->create_service<kungshu_msgs::srv::SetEnable>("set_enble_serivce",
     [this](const std::shared_ptr<kungshu_msgs::srv::SetEnable::Request> request,
@@ -128,7 +130,7 @@ ArmNode::ArmNode() : Node("arm_node") {
                 max_acc[i] = request->acc[i];
               }
 
-              MoveToPosition(target_pos, max_vel, max_acc);
+              MoveJ(target_pos, max_vel, max_acc);
           }
 
         }
@@ -155,7 +157,7 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       state_publisher_->publish(state);
 
-
+      loop_mutex_.lock();
       if (is_running_) {
         if (otg_.update(input_, output_) == ruckig::Result::Working) {
 
@@ -168,10 +170,11 @@ ArmNode::ArmNode() : Node("arm_node") {
         else {
           is_running_ = false;
         }
-
       }
+      loop_mutex_.unlock();
 
       Fieldbus::LoopOnce();
+
 
 
       auto time_end = std::chrono::high_resolution_clock::now();
@@ -190,17 +193,37 @@ ArmNode::ArmNode() : Node("arm_node") {
     }
   });
 
+  // Read some pdo
+  for (int i = 0; i < 3; i++) {
+    Fieldbus::LoopOnce();
+    std::this_thread::sleep_for(std::chrono::microseconds(4000));
+  }
 
-
-}
-void ArmNode::MoveToPosition(const std::array<double, 14>& target_pos,
-                             const std::array<double, 14>& max_vel,
-                             const std::array<double, 14>& max_acc) {
   for (int i = 0; i < 14; i++) {
-    spdlog::info("Joint {}: pos->{}, target_pos->{}, max_vel->{}, max_acc->{}",i, drivers_[i]->GetPosition(), target_pos[i], max_vel[i], max_acc[i]);
+    drivers_[i]->SetModeOfOperationRaw(8); // Cyclic Synchronous Position Mode
+    drivers_[i]->SetTargetPosition(drivers_[i]->GetPosition());
+    drivers_[i]->SetTargetVelocity(0);
+    drivers_[i]->SetTargetTorque(0);
+
     input_.current_position[i] = drivers_[i]->GetPosition();
     input_.current_velocity[i] = 0.0;
     input_.current_acceleration[i] = 0.0;
+  }
+
+  input_.synchronization = ruckig::Synchronization::Phase;
+
+
+}
+
+void ArmNode::MoveJ(const std::array<double, 14>& target_pos,
+                             const std::array<double, 14>& max_vel,
+                             const std::array<double, 14>& max_acc) {
+  loop_mutex_.lock();
+  for (int i = 0; i < 14; i++) {
+    // spdlog::info("Joint {}: pos->{}, target_pos->{}, max_vel->{}, max_acc->{}",i, drivers_[i]->GetPosition(), target_pos[i], max_vel[i], max_acc[i]);
+    // input_.current_position[i] = drivers_[i]->GetPosition();
+    // input_.current_velocity[i] = 0.0;
+    // input_.current_acceleration[i] = 0.0;
 
     input_.target_position[i] = target_pos[i];
     input_.target_velocity[i] = 0.0;
@@ -210,10 +233,8 @@ void ArmNode::MoveToPosition(const std::array<double, 14>& target_pos,
     input_.max_jerk[i] = max_acc[i] * 10;
   }
 
-  input_.synchronization = ruckig::Synchronization::None;
-
+  loop_mutex_.unlock();
   is_running_ = true;
-
 }
 
 void ArmNode::command_callback(const kungshu_msgs::msg::ArmServoCommand& msg) {

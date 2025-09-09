@@ -41,7 +41,7 @@ class ArmNode : public rclcpp::Node {
  public:
   ArmNode();
 
-  void MoveToPosition(const std::array<double, 14>& target_pos, const std::array<double, 14>& max_vel, const std::array<double, 14>& max_acc);
+  void MoveJ(const std::array<double, 14>& target_pos, const std::array<double, 14>& max_vel, const std::array<double, 14>& max_acc);
 
 
 private:
@@ -70,6 +70,8 @@ private:
 
 
   std::atomic<bool> is_running_ = false;
+
+  std::mutex loop_mutex_;
 
 };
 
