@@ -159,7 +159,8 @@ ArmNode::ArmNode() : Node("arm_node") {
 
       loop_mutex_.lock();
       if (is_running_) {
-        if (otg_.update(input_, output_) == ruckig::Result::Working) {
+        auto res = otg_.update(input_, output_);
+        if (res == ruckig::Working) {
 
           for (int i = 0; i < 14; i++) {
               drivers_[i]->SetTargetPosition(output_.new_position[i]);
@@ -167,7 +168,10 @@ ArmNode::ArmNode() : Node("arm_node") {
 
             output_.pass_to_input(input_);
         }
-        else {
+        else if (res == ruckig::Error) {
+          is_running_ = false;
+        }
+        else if (res == ruckig::Finished) {
           is_running_ = false;
         }
       }
