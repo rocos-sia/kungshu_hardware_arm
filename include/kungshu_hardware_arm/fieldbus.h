@@ -187,8 +187,8 @@ class Fieldbus {
   ec_ODlistt ODlist_{};
   ec_OElistt OElist_{};
 
-  Inputs inputs_[7] {};
-  Outputs outputs_[7] {};
+  Inputs inputs_[8] {};
+  Outputs outputs_[8] {}; //! TODO: This need to be longer than the real pdo length. Don't know why.
 
   std::thread fieldbus_thread_;
 
