@@ -78,7 +78,7 @@ ArmNode::ArmNode() : Node("arm_node") {
   //         "commands", qos_best_effort,
   //         std::bind(&ArmNode::command_callback, this, std::placeholders::_1));
 
-  enable_srv_ = this->create_service<kungshu_msgs::srv::SetEnable>("set_enble_serivce",
+  enable_srv_ = this->create_service<kungshu_msgs::srv::SetEnable>("set_enable_service",
     [this](const std::shared_ptr<kungshu_msgs::srv::SetEnable::Request> request,
            std::shared_ptr<kungshu_msgs::srv::SetEnable::Response> response) {
 

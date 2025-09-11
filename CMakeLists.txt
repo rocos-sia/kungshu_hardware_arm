@@ -30,6 +30,10 @@ target_include_directories(arm_node PUBLIC
         $<INSTALL_INTERFACE:include>
 )
 
+add_executable(test_movej src/test_movej.cpp)
+ament_target_dependencies(test_movej rclcpp kungshu_msgs)
+install(TARGETS test_movej DESTINATION lib/${PROJECT_NAME})
+
 target_compile_features(arm_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 target_link_libraries(arm_node
