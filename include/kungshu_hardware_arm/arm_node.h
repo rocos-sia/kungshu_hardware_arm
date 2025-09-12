@@ -29,7 +29,8 @@
 
 #include <kungshu_msgs/srv/set_enable.hpp>
 #include <kungshu_msgs/srv/set_mode_of_operation.hpp>
-#include <kungshu_msgs/srv/move_j.hpp>
+// #include <kungshu_msgs/srv/move_j.hpp>
+#include "kungshu_msgs/msg/move_j_command.hpp"   
 
 #include  <ruckig/ruckig.hpp>
 
@@ -58,8 +59,8 @@ private:
   rclcpp::Service<kungshu_msgs::srv::SetEnable>::SharedPtr enable_srv_;
   rclcpp::Service<kungshu_msgs::srv::SetModeOfOperation>::SharedPtr mode_srv_;
 
-  rclcpp::Service<kungshu_msgs::srv::MoveJ>::SharedPtr move_j_srv_;
-
+  // rclcpp::Service<kungshu_msgs::srv::MoveJ>::SharedPtr move_j_srv_;
+  rclcpp::Subscription<kungshu_msgs::msg::MoveJCommand>::SharedPtr move_j_sub_;
   std::vector<Drive*> drivers_ {};
 
   std::thread time_sync_thread_;  // Thread for time synchronization

@@ -114,29 +114,42 @@ ArmNode::ArmNode() : Node("arm_node") {
       response->success = success;
     });
 
-  move_j_srv_ = this->create_service<kungshu_msgs::srv::MoveJ>(
-    "movej_service",
-        [this](const std::shared_ptr<kungshu_msgs::srv::MoveJ::Request> request,
-                   std::shared_ptr<kungshu_msgs::srv::MoveJ::Response> response) {
+  // move_j_srv_ = this->create_service<kungshu_msgs::srv::MoveJ>(
+  //   "movej_service",
+  //       [this](const std::shared_ptr<kungshu_msgs::srv::MoveJ::Request> request,
+  //                  std::shared_ptr<kungshu_msgs::srv::MoveJ::Response> response) {
 
-          for (int i = 0; i < 14; i++) {
-            spdlog::info("Received move j service request");
+  //         for (int i = 0; i < 14; i++) {
+  //           spdlog::info("Received move j service request");
 
-              std::array<double, 14> target_pos{}, max_vel{}, max_acc{};
+  //             std::array<double, 14> target_pos{}, max_vel{}, max_acc{};
 
-              for (int i = 0; i < 14; i++) {
-                target_pos[i] = request->pos[i];
-                max_vel[i] = request->vel[i];
-                max_acc[i] = request->acc[i];
-              }
+  //             for (int i = 0; i < 14; i++) {
+  //               target_pos[i] = request->pos[i];
+  //               max_vel[i] = request->vel[i];
+  //               max_acc[i] = request->acc[i];
+  //             }
 
-              MoveJ(target_pos, max_vel, max_acc);
-          }
+  //             MoveJ(target_pos, max_vel, max_acc);
+  //         }
 
-        }
-  );
+  //       }
+  // );
 
-
+  move_j_sub_ = this->create_subscription<kungshu_msgs::msg::MoveJCommand>(
+  "move_j_command",                       
+  qos_best_effort,                      
+  [this](const kungshu_msgs::msg::MoveJCommand::SharedPtr msg) {
+    
+    std::array<double, 14> target_pos{}, max_vel{}, max_acc{};
+    for (size_t i = 0; i < 14; ++i) {
+      target_pos[i] = msg->pos[i];
+      max_vel[i]    = msg->vel[i];
+      max_acc[i]    = msg->acc[i];
+    }
+  
+    MoveJ(target_pos, max_vel, max_acc);
+  });
 
   time_sync_thread_ = std::thread([this]() {
     while (rclcpp::ok()) {
