@@ -64,7 +64,7 @@ private:
   std::vector<Drive*> drivers_ {};
 
   std::thread time_sync_thread_;  // Thread for time synchronization
-
+  std::thread publish_thread_; 
   ruckig::Ruckig<14> otg_{0.004}; // 4ms control period
   ruckig::InputParameter<14> input_;
   ruckig::OutputParameter<14> output_;

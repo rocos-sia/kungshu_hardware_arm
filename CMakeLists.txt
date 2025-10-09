@@ -22,7 +22,7 @@ find_package(soem REQUIRED)
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(ruckig REQUIRED)
-
+find_package(example_interfaces REQUIRED)
 
 add_executable(arm_node src/main.cpp src/drive.cpp src/fieldbus.cpp src/arm_node.cpp)
 target_include_directories(arm_node PUBLIC
@@ -31,8 +31,12 @@ target_include_directories(arm_node PUBLIC
 )
 
 add_executable(test_movej src/test_movej.cpp)
-ament_target_dependencies(test_movej rclcpp kungshu_msgs)
+ament_target_dependencies(test_movej rclcpp kungshu_msgs )
 install(TARGETS test_movej DESTINATION lib/${PROJECT_NAME})
+
+add_executable(hand_test src/hand_test.cpp)
+ament_target_dependencies(hand_test rclcpp kungshu_msgs example_interfaces)
+install(TARGETS hand_test DESTINATION lib/${PROJECT_NAME})
 
 target_compile_features(arm_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 

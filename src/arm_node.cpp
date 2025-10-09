@@ -99,7 +99,11 @@ ArmNode::ArmNode() : Node("arm_node") {
           drivers_[i]->setDriverState(DriveState::SwitchOnDisabled , false);
         }
       }
-
+      std::this_thread::sleep_for(std::chrono::microseconds(100000));
+      for (int i = 0; i < 14; i++) {
+          if(drivers_[i]->getDriverState(0) != DriveState::OperationEnabled)
+          response->success = false;
+      }
       response->success = success;
     });
 
@@ -150,12 +154,8 @@ ArmNode::ArmNode() : Node("arm_node") {
   
     MoveJ(target_pos, max_vel, max_acc);
   });
-
-  time_sync_thread_ = std::thread([this]() {
+  publish_thread_ = std::thread([this]() {
     while (rclcpp::ok()) {
-
-      auto time_start = std::chrono::high_resolution_clock::now();
-
       kungshu_msgs::msg::ArmState state;
 
       for (int i = 0; i < 14; i++) {
@@ -169,6 +169,27 @@ ArmNode::ArmNode() : Node("arm_node") {
       }
 
       state_publisher_->publish(state);
+      std::this_thread::sleep_for(std::chrono::microseconds(4000));
+    }
+  });
+  time_sync_thread_ = std::thread([this]() {
+    while (rclcpp::ok()) {
+
+      auto time_start = std::chrono::high_resolution_clock::now();
+
+      // kungshu_msgs::msg::ArmState state;
+
+      // for (int i = 0; i < 14; i++) {
+      //   state.header.stamp = this->now();
+      //   state.q[i] = drivers_[i]->GetPosition();
+      //   state.dq[i] = drivers_[i]->GetVelocity();
+      //   state.tau[i] = drivers_[i]->GetTorque();
+      //   state.load[i] = drivers_[i]->GetLoadTorque();
+      //   state.status[i] = drivers_[i]->GetStatus();
+      //   state.temperature[i] = drivers_[i]->GetStatusWordRaw();
+      // }
+
+      // state_publisher_->publish(state);
 
       loop_mutex_.lock();
       if (is_running_) {
