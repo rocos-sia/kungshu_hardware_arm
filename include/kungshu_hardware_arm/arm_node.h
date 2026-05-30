@@ -43,7 +43,7 @@ class ArmNode : public rclcpp::Node {
  public:
   ArmNode();
 
-  void MoveJ(const std::array<double, 14>& target_pos, const std::array<double, 14>& max_vel, const std::array<double, 14>& max_acc);
+  void MoveJ(const std::vector<double>& target_pos, const std::vector<double>& max_vel, const std::vector<double>& max_acc);
 
 
 private:
@@ -51,12 +51,16 @@ private:
 
 
  private:
-  std::shared_ptr<Fieldbus> left_bus_;    // left arm
-  std::shared_ptr<Fieldbus> right_bus_;  // right arm
+  // Configuration
+  int num_arms_;           // 1 or 2
+  int joints_per_arm_;     // 7
+  int total_joints_;       // num_arms * joints_per_arm
+
+  std::vector<std::shared_ptr<Fieldbus>> buses_;  // Dynamic bus list
 
   rclcpp::Publisher<kungshu_msgs::msg::ArmState>::SharedPtr state_publisher_;
   rclcpp::Subscription<kungshu_msgs::msg::ArmServoCommand>::SharedPtr command_subscriber_;
-  
+
 
   rclcpp::Service<kungshu_msgs::srv::SetEnable>::SharedPtr enable_srv_;
   rclcpp::Service<kungshu_msgs::srv::SetModeOfOperation>::SharedPtr mode_srv_;
@@ -68,10 +72,11 @@ private:
   std::vector<Drive*> drivers_ {};
 
   std::thread time_sync_thread_;  // Thread for time synchronization
-  std::thread publish_thread_; 
-  ruckig::Ruckig<14> otg_{0.004}; // 4ms control period
-  ruckig::InputParameter<14> input_;
-  ruckig::OutputParameter<14> output_;
+  std::thread publish_thread_;
+  // Ruckig per arm (7 joints each)
+  std::vector<ruckig::Ruckig<7>> otg_;
+  std::vector<ruckig::InputParameter<7>> input_;
+  std::vector<ruckig::OutputParameter<7>> output_;
 
 
   std::atomic<bool> is_running_ = false;

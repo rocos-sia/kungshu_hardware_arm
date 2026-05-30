@@ -1,0 +1,80 @@
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/test_movej.cpp:124:10: fatal error: kungshu_msgs/msg/move_j_command.hpp: No such file or directory
+  124 | #include <kungshu_msgs/msg/move_j_command.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/test_movej.dir/build.make:82: CMakeFiles/test_movej.dir/src/test_movej.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:194: CMakeFiles/test_movej.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+In file included from /home/sun/Documents/GitHub/kungshu_hardware_arm/src/main.cpp:8:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/include/kungshu_hardware_arm/arm_node.h:32:10: fatal error: kungshu_msgs/srv/set_torque_enable.hpp: No such file or directory
+   32 | #include "kungshu_msgs/srv/set_torque_enable.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/arm_node.dir/build.make:82: CMakeFiles/arm_node.dir/src/main.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+In file included from /home/sun/Documents/GitHub/kungshu_hardware_arm/src/arm_node.cpp:5:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/include/kungshu_hardware_arm/arm_node.h:32:10: fatal error: kungshu_msgs/srv/set_torque_enable.hpp: No such file or directory
+   32 | #include "kungshu_msgs/srv/set_torque_enable.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/arm_node.dir/build.make:124: CMakeFiles/arm_node.dir/src/arm_node.cpp.o] Error 1
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp: In member function ‘bool KSH::Fieldbus::Start()’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:23:41: warning: logical not is only applied to the left hand side of comparison [-Wlogical-not-parentheses]
+   23 |   if (!ecx_init(&ctx_, ifname_.c_str()) > 0) {
+      |                                         ^
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:23:7: note: add parentheses around left hand side expression to silence this warning
+   23 |   if (!ecx_init(&ctx_, ifname_.c_str()) > 0) {
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |       (                                )
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:16:17: warning: unused variable ‘context’ [-Wunused-variable]
+   16 |   ecx_contextt *context;
+      |                 ^~~~~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:17:14: warning: unused variable ‘grp’ [-Wunused-variable]
+   17 |   ec_groupt *grp;
+      |              ^~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp: In member function ‘void KSH::Fieldbus::PrintAvaliableAdapters()’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:262:16: warning: unused variable ‘adapter’ [-Wunused-variable]
+  262 |   ec_adaptert *adapter = NULL;
+      |                ^~~~~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:263:16: warning: unused variable ‘head’ [-Wunused-variable]
+  263 |   ec_adaptert *head = NULL;
+      |                ^~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp: In member function ‘void KSH::Fieldbus::SetCommand(int, int8)’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:363:31: warning: unused parameter ‘id’ [-Wunused-parameter]
+  363 | void Fieldbus::SetCommand(int id, int8 value) {}
+      |                           ~~~~^~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:363:40: warning: unused parameter ‘value’ [-Wunused-parameter]
+  363 | void Fieldbus::SetCommand(int id, int8 value) {}
+      |                                   ~~~~~^~~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp: In member function ‘void KSH::Fieldbus::si_sdo(int)’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:869:42: warning: format ‘%s’ expects argument of type ‘char*’, but argument 4 has type ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} [-Wformat=]
+  869 |         printf("0x%04x      %-40s      [%s]\n", ODlist_.Index[i], name,
+      |                                         ~^
+      |                                          |
+      |                                          char*
+  870 |                otype2string(ODlist_.ObjectCode[i]));
+      |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                            |
+      |                            std::string {aka std::__cxx11::basic_string<char>}
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp: In static member function ‘static int KSH::Fieldbus::slave_setup(ecx_contextt*, uint16)’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:913:10: warning: unused variable ‘u16val’ [-Wunused-variable]
+  913 |   uint16 u16val;
+      |          ^~~~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/fieldbus.cpp:914:10: warning: unused variable ‘u32val’ [-Wunused-variable]
+  914 |   uint32 u32val;
+      |          ^~~~~~
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/drive.cpp: In member function ‘KSH::DriveState KSH::Drive::getDriverState(int)’:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/drive.cpp:36:38: warning: unused parameter ‘id’ [-Wunused-parameter]
+   36 | DriveState Drive::getDriverState(int id) {
+      |                                  ~~~~^~
+gmake[1]: *** [CMakeFiles/Makefile2:162: CMakeFiles/arm_node.dir/all] Error 2
+gmake: *** [Makefile:149: all] Error 2

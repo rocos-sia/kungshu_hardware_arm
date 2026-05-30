@@ -1,0 +1,8 @@
+In file included from /home/sun/Documents/GitHub/kungshu_hardware_arm/src/main.cpp:8:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/include/kungshu_hardware_arm/arm_node.h:32:10: fatal error: kungshu_msgs/srv/set_torque_enable.hpp: No such file or directory
+   32 | #include "kungshu_msgs/srv/set_torque_enable.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/arm_node.dir/build.make:79: CMakeFiles/arm_node.dir/src/main.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:159: CMakeFiles/arm_node.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

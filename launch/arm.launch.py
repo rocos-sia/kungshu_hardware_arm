@@ -38,8 +38,10 @@ def generate_launch_description():
         # emulate_tty=True,
         parameters=[
             {
+                'num_arms': 2,          # 1 = single arm, 2 = dual arm
+                'joints_per_arm': 7,    # joints per arm
                 'left' : 'enx6c1ff71e2469',
-                'right': 'enp114s0'
+                'right': 'enp114s0'     # only used when num_arms >= 2
             }
         ]
     )

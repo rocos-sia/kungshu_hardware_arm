@@ -1,0 +1,5 @@
+source;share/kungshu_hardware_arm/local_setup.bash
+source;share/kungshu_hardware_arm/local_setup.dsv
+source;share/kungshu_hardware_arm/local_setup.ps1
+source;share/kungshu_hardware_arm/local_setup.sh
+source;share/kungshu_hardware_arm/local_setup.zsh

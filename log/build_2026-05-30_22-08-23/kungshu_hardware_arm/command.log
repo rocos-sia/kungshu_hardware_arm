@@ -1,0 +1,2 @@
+Invoking command in '/home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm -- -j16 -l16
+Invoked command in '/home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm -- -j16 -l16

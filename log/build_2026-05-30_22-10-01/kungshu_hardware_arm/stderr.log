@@ -1,0 +1,31 @@
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+/home/sun/Documents/GitHub/kungshu_hardware_arm/src/test_movej.cpp:124:10: fatal error: kungshu_msgs/msg/move_j_command.hpp: No such file or directory
+  124 | #include <kungshu_msgs/msg/move_j_command.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+In file included from /home/sun/Documents/GitHub/kungshu_hardware_arm/src/arm_node.cpp:5:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/include/kungshu_hardware_arm/arm_node.h:32:10: fatal error: kungshu_msgs/srv/set_torque_enable.hpp: No such file or directory
+   32 | #include "kungshu_msgs/srv/set_torque_enable.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/arm_node.dir/build.make:124: CMakeFiles/arm_node.dir/src/arm_node.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/test_movej.dir/build.make:82: CMakeFiles/test_movej.dir/src/test_movej.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:194: CMakeFiles/test_movej.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+In file included from /home/sun/Documents/GitHub/kungshu_hardware_arm/src/main.cpp:8:
+/home/sun/Documents/GitHub/kungshu_hardware_arm/include/kungshu_hardware_arm/arm_node.h:32:10: fatal error: kungshu_msgs/srv/set_torque_enable.hpp: No such file or directory
+   32 | #include "kungshu_msgs/srv/set_torque_enable.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/arm_node.dir/build.make:82: CMakeFiles/arm_node.dir/src/main.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:162: CMakeFiles/arm_node.dir/all] Error 2
+gmake: *** [Makefile:149: all] Error 2

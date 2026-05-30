@@ -1,0 +1,27 @@
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+CMake Error at CMakeLists.txt:15 (find_package):
+  By not providing "Findkungshu_msgs.cmake" in CMAKE_MODULE_PATH this project
+  has asked CMake to find a package configuration file provided by
+  "kungshu_msgs", but CMake did not find one.
+
+  Could not find a package configuration file provided by "kungshu_msgs" with
+  any of the following names:
+
+    kungshu_msgs.cps
+    kungshu_msgsConfig.cmake
+    kungshu_msgs-config.cmake
+
+  Add the installation prefix of "kungshu_msgs" to CMAKE_PREFIX_PATH or set
+  "kungshu_msgs_DIR" to a directory containing one of the above files.  If
+  "kungshu_msgs" provides a separate development package or SDK, be sure it
+  has been installed.
+
+

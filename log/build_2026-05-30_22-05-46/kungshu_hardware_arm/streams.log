@@ -1,0 +1,42 @@
+[0.014s] Invoking command in '/home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm': /usr/bin/cmake /home/sun/Documents/GitHub/kungshu_hardware_arm -DCMAKE_INSTALL_PREFIX=/home/sun/Documents/GitHub/kungshu_hardware_arm/install/kungshu_hardware_arm
+[0.039s] CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+[0.039s]   Compatibility with CMake < 3.10 will be removed from a future version of
+[0.040s]   CMake.
+[0.040s] 
+[0.040s]   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+[0.040s]   to tell CMake that the project requires at least <min> but has been updated
+[0.040s]   to work with policies introduced by <max> or earlier.
+[0.040s] 
+[0.040s] 
+[0.144s] -- The C compiler identification is GNU 11.4.0
+[0.240s] -- The CXX compiler identification is GNU 11.4.0
+[0.250s] -- Detecting C compiler ABI info
+[0.306s] -- Detecting C compiler ABI info - done
+[0.392s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.392s] -- Detecting C compile features
+[0.392s] -- Detecting C compile features - done
+[0.407s] -- Detecting CXX compiler ABI info
+[0.473s] -- Detecting CXX compiler ABI info - done
+[0.490s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.490s] -- Detecting CXX compile features
+[0.491s] -- Detecting CXX compile features - done
+[0.515s] CMake Error at CMakeLists.txt:9 (find_package):
+[0.515s]   By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project
+[0.515s]   has asked CMake to find a package configuration file provided by
+[0.516s]   "ament_cmake", but CMake did not find one.
+[0.516s] 
+[0.516s]   Could not find a package configuration file provided by "ament_cmake" with
+[0.516s]   any of the following names:
+[0.516s] 
+[0.516s]     ament_cmake.cps
+[0.516s]     ament_cmakeConfig.cmake
+[0.516s]     ament_cmake-config.cmake
+[0.516s] 
+[0.516s]   Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set
+[0.516s]   "ament_cmake_DIR" to a directory containing one of the above files.  If
+[0.516s]   "ament_cmake" provides a separate development package or SDK, be sure it
+[0.516s]   has been installed.
+[0.517s] 
+[0.517s] 
+[0.517s] -- Configuring incomplete, errors occurred!
+[0.518s] Invoked command in '/home/sun/Documents/GitHub/kungshu_hardware_arm/build/kungshu_hardware_arm' returned '1': /usr/bin/cmake /home/sun/Documents/GitHub/kungshu_hardware_arm -DCMAKE_INSTALL_PREFIX=/home/sun/Documents/GitHub/kungshu_hardware_arm/install/kungshu_hardware_arm
