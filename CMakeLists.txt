@@ -34,6 +34,10 @@ add_executable(test_movej src/test_movej.cpp)
 ament_target_dependencies(test_movej rclcpp kungshu_msgs )
 install(TARGETS test_movej DESTINATION lib/${PROJECT_NAME})
 
+add_executable(movej_sequence src/movej_sequence.cpp)
+ament_target_dependencies(movej_sequence rclcpp kungshu_msgs)
+install(TARGETS movej_sequence DESTINATION lib/${PROJECT_NAME})
+
 add_executable(hand_test src/hand_test.cpp)
 ament_target_dependencies(hand_test rclcpp kungshu_msgs example_interfaces)
 install(TARGETS hand_test DESTINATION lib/${PROJECT_NAME})
