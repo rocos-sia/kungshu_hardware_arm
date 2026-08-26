@@ -117,7 +117,47 @@ ArmNode::ArmNode() : Node("arm_node") {
       }
       response->success = success;
     });
+  
+  torque_enable_srv_ = this->create_service<kungshu_msgs::srv::SetTorqueEnable>(
+  "set_torque_enable",
+  [this](const std::shared_ptr<kungshu_msgs::srv::SetTorqueEnable::Request> request,
+         std::shared_ptr<kungshu_msgs::srv::SetTorqueEnable::Response> response)
+  {
+    std::lock_guard<std::mutex> lock(loop_mutex_);   // 保护驱动器访问
 
+    
+    for (int i = 0; i < 14; ++i) {
+      if (drivers_[i]->getDriverState(0) != DriveState::OperationEnabled) {
+        response->success = false;
+        response->message = "Joint " + std::to_string(i) + " is not in OperationEnabled";
+        return;
+      }
+    }
+
+
+    uint8_t new_mode = request->torque_enable ? 10 : 8;  // 10=CST, 8=CSP
+    for (int i = 0; i < 14; ++i) {
+      drivers_[i]->SetModeOfOperationRaw(new_mode);
+      // drivers_[i]->SetTargetTorque(0.0);               
+     
+      if (!request->torque_enable) {
+        // drivers_[i]->SetModeOfOperationRaw(8);
+        drivers_[i]->SetTargetPosition(drivers_[i]->GetPosition());
+      }
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    bool all_ok = true;
+    for (int i = 0; i < 14; ++i) {
+      if (drivers_[i]->GetModeOfOperationRaw() != new_mode) {
+        all_ok = false;
+        break;
+      }
+    }
+
+    response->success = all_ok;
+    response->message = all_ok ? "OK" : "Mode switch timeout";
+  });
   // move_j_srv_ = this->create_service<kungshu_msgs::srv::MoveJ>(
   //   "movej_service",
   //       [this](const std::shared_ptr<kungshu_msgs::srv::MoveJ::Request> request,
@@ -153,6 +193,30 @@ ArmNode::ArmNode() : Node("arm_node") {
     }
   
     MoveJ(target_pos, max_vel, max_acc);
+  });
+  tau_sub_ = this->create_subscription<kungshu_msgs::msg::ArmTorqueCommand>(
+  "tau_command",
+  qos_best_effort,
+  [this](const kungshu_msgs::msg::ArmTorqueCommand::SharedPtr msg)
+  {
+    /* 1. 状态检查 */
+    for (int i = 0; i < 14; ++i) {
+      if (drivers_[i]->getDriverState(0) != DriveState::OperationEnabled) {
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                             "Joint %d is not in OperationEnabled — torque command ignored", i);
+        return;
+      }
+      if (drivers_[i]->GetModeOfOperationRaw() != 10) {
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                             "Joint %d is not in CST (10) — torque command ignored", i);
+        return;
+      }
+    }
+
+    /* 2. 直接写扭矩 */
+    for (int i = 0; i < 14; ++i) {
+      drivers_[i]->SetTargetTorque(msg->tau[i]);
+    }
   });
   publish_thread_ = std::thread([this]() {
     while (rclcpp::ok()) {

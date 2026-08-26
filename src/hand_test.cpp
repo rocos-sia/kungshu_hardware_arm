@@ -225,12 +225,19 @@ bool send_positions2(int sock, const std::vector<uint16_t>& pos)
 
 int main()
 {
-    const std::vector<uint16_t> TARGET_POS = {100, 100, 100, 100, 100, 100};
-    const std::vector<uint16_t> OPEN_POS = {1000, 1000, 1000, 1000, 1000, 1000};
+    const std::vector<uint16_t> TARGET_POS = {100, 100, 100, 100, 1000, 1000};
+    const std::vector<uint16_t> OPEN_POS = {1000, 1000, 1000, 1000, 1000, 0};
 
     int sock = can_init();
     if (sock < 0) return 1;
-    send_positions(sock, OPEN_POS);
+    send_positions(sock, TARGET_POS);
+    usleep(1000000);
+    send_positions(sock, TARGET_POS);
+    // while(1){
+    //     bool ok = send_positions2(sock, TARGET_POS);
+    //     if(ok) std::printf("send_positions success\n");
+    //     usleep(500000);
+    // }
     bool ok = send_positions2(sock, TARGET_POS);
     if(ok) std::printf("send_positions success\n");
     close(sock);
